@@ -39,6 +39,7 @@ cloudLabels:
 
   assert.Equal(t, Cluster {
     Name: "es",
+    KubernetesVersion: "1.11.7",
     DnsZone: "example.com",
     Region: "eu-west-1",
     MasterZones: []string {"a", "b", "c"},
