@@ -3,6 +3,7 @@ package main
 import (
   "fmt"
   "github.com/stretchr/testify/assert"
+  "gitlab.com/sparetimecoders/k8s-go/config"
   "testing"
 )
 
@@ -11,7 +12,7 @@ func TestInvalidConfig(t *testing.T) {
     fmt.Println("Skipping test in short-mode")
   }
 
-  _, err := ParseConfig([]byte(`
+  _, err := config.ParseConfig([]byte(`
 name: es
 `))
 
@@ -23,7 +24,7 @@ func TestValidConfig(t *testing.T) {
     fmt.Println("Skipping test in short-mode")
   }
 
-  config, err := ParseConfig([]byte(`
+  c, err := config.ParseConfig([]byte(`
 name: es
 dnsZone: example.com
 masterZones:
@@ -37,14 +38,14 @@ cloudLabels:
 
   assert.Nil(t, err)
 
-  assert.Equal(t, Cluster {
+  assert.Equal(t, config.Cluster {
     Name: "es",
     KubernetesVersion: "1.11.7",
     DnsZone: "example.com",
     Region: "eu-west-1",
     MasterZones: []string {"a", "b", "c"},
     NetworkCIDR: "172.21.0.0/22",
-    Nodes: Nodes{
+    Nodes: config.Nodes{
       Min: 1,
       Max: 2,
       InstanceType: "t3.medium",
@@ -55,5 +56,5 @@ cloudLabels:
       "organisation": "dSPA",
     },
     SshKeyPath: "~/.ssh/id_rsa.pub",
-  }, config)
+  }, c)
 }
