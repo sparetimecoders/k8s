@@ -16,7 +16,7 @@ type Nodes struct {
 	InstanceType string `yaml:"instanceType" default:"t3.medium"`
 }
 
-type Cluster struct {
+type ClusterConfig struct {
 	Name               string            `yaml:"name"`
 	KubernetesVersion  string            `yaml:"kubernetesVersion" default:"1.11.7"`
 	DnsZone            string            `yaml:"dnsZone"`
@@ -29,16 +29,16 @@ type Cluster struct {
 	SshKeyPath         string            `yaml:"sshKeyPath" default:"~/.ssh/id_rsa.pub"`
 }
 
-func ParseConfigFile(file string) (Cluster, error) {
+func ParseConfigFile(file string) (ClusterConfig, error) {
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
-		return Cluster{}, err
+		return ClusterConfig{}, err
 	}
 	return ParseConfig(data)
 }
 
-func ParseConfig(content []byte) (Cluster, error) {
-	config := Cluster{}
+func ParseConfig(content []byte) (ClusterConfig, error) {
+	config := ClusterConfig{}
 	if err := yaml.UnmarshalStrict(content, &config); err != nil {
 		return config, err
 	} else {
