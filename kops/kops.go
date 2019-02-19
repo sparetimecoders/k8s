@@ -13,15 +13,16 @@ import (
 
 type kops struct {
 	stateStore string
+	cmd string
 }
 
 func New(stateStore string) kops {
-	k := kops{stateStore}
+	k := kops{stateStore, "kops"}
 	return k
 }
 
 func (k kops) CreateCluster(config config.Cluster) error {
-	if ok := minimumKopsVersionInstalled(config.KubernetesVersion); ok == false {
+	if ok := k.minimumKopsVersionInstalled(config.KubernetesVersion); ok == false {
 		log.Fatalf("Installed version of kops can't handle requested kubernetes version (%s)", config.KubernetesVersion)
 	}
 	name := fmt.Sprintf("%s.%s", config.Name, config.DnsZone)
@@ -68,8 +69,7 @@ func (k kops) CreateCluster(config config.Cluster) error {
 		k.stateStore,
 	),
 		"\n", " ", -1))
-	fmt.Println(params)
-	cmd := exec.Command("kops", strings.Split(params, " ")...)
+	cmd := exec.Command(k.cmd, strings.Split(params, " ")...)
 
 	out, _ := cmd.StdoutPipe()
 	err, _ := cmd.StderrPipe()
@@ -86,9 +86,9 @@ func (k kops) CreateCluster(config config.Cluster) error {
 	return cmd.Wait()
 }
 
-func getKopsVersion() (string, error) {
+func (k kops) getKopsVersion() (string, error) {
 
-	cmd := exec.Command("kops", "version")
+	cmd := exec.Command(k.cmd, "version")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err
@@ -100,10 +100,10 @@ func getKopsVersion() (string, error) {
 	return version, nil
 }
 
-func minimumKopsVersionInstalled(requiredKopsVersion string) bool {
-	version, err := getKopsVersion()
+func (k kops) minimumKopsVersionInstalled(requiredKopsVersion string) bool {
+	version, err := k.getKopsVersion()
 	if err != nil {
-		fmt.Printf("Failed to get kops version %s", err)
+		log.Printf("Failed to get kops version %s\n", err)
 		return false
 	}
 
@@ -118,7 +118,7 @@ func printOut(out io.ReadCloser) {
 	scanner.Split(bufio.ScanLines)
 
 	for scanner.Scan() {
-		fmt.Println(scanner.Text())
+		log.Println(scanner.Text())
 	}
 }
 

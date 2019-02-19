@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"gopkg.in/yaml.v2"
+	"log"
 	"os/exec"
 	"strings"
 	"time"
@@ -34,15 +35,16 @@ func (k kops) UpdateInstanceGroup(group InstanceGroup) error {
 
 	params := strings.TrimSpace(fmt.Sprintf(`replace ig %v --name %v --state %v -f -`, group.Metadata.Name, group.Metadata.Labels["kops.k8s.io/cluster"], k.stateStore))
 
-	cmd := exec.Command("kops", strings.Split(params, " ")...)
+	cmd := exec.Command(k.cmd, strings.Split(params, " ")...)
 	data, err := yaml.Marshal(group)
 	if err != nil {
-		fmt.Println("Failed to convert to yaml")
+		log.Println("Failed to convert to yaml")
 		return err
 	}
 	cmd.Stdin = bytes.NewBuffer(data)
 	err = cmd.Start()
 	if err != nil {
+		log.Printf("Failed to update instancegroup %v\n %v\n", group.Metadata.Name, err)
 		return err
 	}
 
@@ -53,7 +55,7 @@ func (k kops) UpdateInstanceGroup(group InstanceGroup) error {
 func (k kops) GetInstanceGroup(name string, clusterName string) (InstanceGroup, error) {
 	params := strings.TrimSpace(fmt.Sprintf(`get ig %v --name %v --state %v -o yaml`, name, clusterName, k.stateStore))
 
-	cmd := exec.Command("kops", strings.Split(params, " ")...)
+	cmd := exec.Command(k.cmd, strings.Split(params, " ")...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return InstanceGroup{}, err
