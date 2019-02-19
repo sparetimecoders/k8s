@@ -1,14 +1,55 @@
-hash: 60c891304385d93c6367b35cfa68ad657ea39dbc7454359e3dd9863d393b1bb1
-updated: 2019-02-18T15:39:20.205762+01:00
+hash: ec8143c6619e2ea40f70cec46edc4338d662f837d11e0c90fc21257be58217d2
+updated: 2019-02-19T13:33:56.2639+01:00
 imports:
+- name: github.com/aws/aws-sdk-go
+  version: 33f1087245887dc9a8090de089808120b299bbec
+  subpackages:
+  - aws
+  - aws/awserr
+  - aws/awsutil
+  - aws/client
+  - aws/client/metadata
+  - aws/corehandlers
+  - aws/credentials
+  - aws/credentials/ec2rolecreds
+  - aws/credentials/endpointcreds
+  - aws/credentials/processcreds
+  - aws/credentials/stscreds
+  - aws/csm
+  - aws/defaults
+  - aws/ec2metadata
+  - aws/endpoints
+  - aws/request
+  - aws/session
+  - aws/signer/v4
+  - internal/ini
+  - internal/sdkio
+  - internal/sdkrand
+  - internal/sdkuri
+  - internal/shareddefaults
+  - private/protocol
+  - private/protocol/json/jsonutil
+  - private/protocol/jsonrpc
+  - private/protocol/query
+  - private/protocol/query/queryutil
+  - private/protocol/rest
+  - private/protocol/xml/xmlutil
+  - service/pricing
+  - service/sts
+- name: github.com/jmespath/go-jmespath
+  version: c2b33e8439af944379acbdd9c3a5fe0bc44bd8a5
 - name: github.com/Masterminds/semver
   version: c7af12943936e8c39859482e61f0574c2fd7fc75
 - name: github.com/stretchr/testify
   version: ffdc059bfe9ce6a4e144ba849dbedead332c6053
   subpackages:
   - assert
+- name: github.com/thoas/go-funk
+  version: fbae87fb5b5cdb35c9682d11c420061cf41268a9
 - name: gopkg.in/yaml.v2
   version: 51d6538a90f86fe93ac480b35f37b2be17fef232
+- name: k8s.io/client-go
+  version: 1638f8970cefaa404ff3a62950f88b08292b2696
 testImports:
 - name: github.com/davecgh/go-spew
   version: d8f796af33cc11cb798c1aaeb27a4ebc5099927d
