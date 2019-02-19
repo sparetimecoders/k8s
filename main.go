@@ -19,6 +19,7 @@ type Nodes struct {
 
 type Cluster struct {
   Name               string            `yaml:"name"`
+  KubernetesVersion  string            `yaml:"kubernetesVersion" default:"1.11.7"`
   DnsZone            string            `yaml:"dnsZone"`
   Region             string            `yaml:"region" default:"eu-west-1"`
   MasterZones        []string          `yaml:"masterZones" default:"a"`
@@ -43,6 +44,8 @@ func main() {
   }
 
   fmt.Printf("%v\n", config)
+
+  _ = CreateCluster(config)
 }
 
 func ParseConfig(content []byte) (Cluster, error) {
