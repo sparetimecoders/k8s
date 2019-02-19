@@ -1,8 +1,8 @@
-package main
+package kops
 
 import (
-"github.com/stretchr/testify/assert"
-"testing"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestParseConfig(t *testing.T) {
@@ -32,7 +32,18 @@ spec:
   - eu-west-1c
 `
 
-	parsed, _ := ParseInstanceGroup([]byte(ig))
+	parsed, _ := parseInstanceGroup([]byte(ig))
 
 	assert.Equal(t, "nodes", parsed.Metadata.Name)
 }
+/*
+func TestGetInstanceGroup(t *testing.T) {
+	kopsSvc := New("s3://k8s.sparetimecoders.com-kops-storage")
+	ig, err := kopsSvc.GetInstanceGroup("nodes", "peter.sparetimecoders.com")
+	if err != nil {
+		assert.Fail(t, "Failed to get ", err)
+	}
+	ig.Spec.MachineType = "t2.medium"
+	kopsSvc.UpdateInstanceGroup(ig)
+}
+*/
