@@ -1,0 +1,52 @@
+variables:
+  PACKAGE_PATH: /go/src/gitlab.com/sparetimecoders/k8s-go
+
+
+# A hack to make Golang-in-Gitlab happy
+before_script:
+  - mkdir -p $(dirname ${PACKAGE_PATH})
+  - ln -s ${CI_PROJECT_DIR} ${PACKAGE_PATH}
+  - cd ${PACKAGE_PATH}
+
+cache:
+  key: "$CI_COMMIT_REF_NAME"
+  paths:
+    - vendor/
+  untracked: true
+
+stages:
+  - deps
+  - test
+  - build
+
+deps:
+  stage: deps
+  image: eugenmayer/golang-builder:1.11
+  script:
+    - glide install -v
+  artifacts:
+    paths:
+      - vendor/
+
+test:
+  stage: test
+  dependencies:
+    - deps
+  image: eugenmayer/golang-builder:1.11
+  script:
+    - go fmt $(go list ./... | grep -v /vendor/)
+    - go vet $(go list ./... | grep -v /vendor/)
+    - CGO_ENABLED=1 go test -race $(go list ./... | grep -v /vendor/) -coverprofile .testCoverage.txt
+
+build:
+  stage: build
+  dependencies:
+    - deps
+  image: eugenmayer/golang-builder:1.11
+  script:
+    - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o release/k8s-go -ldflags '-w -s'
+  artifacts:
+    paths:
+      - release/
+
+

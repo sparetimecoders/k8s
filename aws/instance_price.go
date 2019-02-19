@@ -1,4 +1,4 @@
-package main
+package aws
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-func OnDemandPrice(instanceType string, region string) (float64, error) {
+func (awsSvc awsService) OnDemandPrice(instanceType string, region string) (float64, error) {
 	sess := session.Must(session.NewSession(&aws.Config{
 		// API Endpoint for price must be eu-east-1
 		Region: aws.String("us-east-1"),

@@ -11,8 +11,12 @@ import (
 )
 
 type InstanceGroup struct {
+	ig instanceGroup
+}
+
+type instanceGroup struct {
 	Kind       string `yaml:"kind"`
-	APIVersion string `yaml:"apiVersion"`
+	ApiVersion string `yaml:"apiVersion"`
 	Metadata   struct {
 		Name              string            `yaml:"name"`
 		CreationTimestamp time.Time         `yaml:"creationTimestamp"`
@@ -28,48 +32,61 @@ type InstanceGroup struct {
 		MaxPrice    string            `yaml:"maxPrice"`
 		CloudLabels map[string]string `yaml:"cloudLabels"`
 		NodeLabels  map[string]string `yaml:"nodeLabels"`
-	} `yaml:spec`
+	} `yaml:"spec"`
 }
 
-func (k kops) UpdateInstanceGroup(group InstanceGroup) error {
+func (ig InstanceGroup) MaxSize(n int) InstanceGroup {
+	ig.ig.Spec.MaxSize = n
+	return ig
+}
 
-	params := strings.TrimSpace(fmt.Sprintf(`replace ig %v --name %v --state %v -f -`, group.Metadata.Name, group.Metadata.Labels["kops.k8s.io/cluster"], k.stateStore))
+func (ig InstanceGroup) MinSize(n int) InstanceGroup {
+	ig.ig.Spec.MinSize = n
+	return ig
+}
 
-	cmd := exec.Command(k.cmd, strings.Split(params, " ")...)
-	data, err := yaml.Marshal(group)
+func (ig InstanceGroup) MaxPrice(price float64) InstanceGroup {
+	ig.ig.Spec.MaxPrice = fmt.Sprintf("%f", price)
+	return ig
+}
+
+func (c cluster) UpdateInstanceGroup(group InstanceGroup) error {
+	log.Printf("Updating instance group %v\n", group.ig.Metadata.Name)
+	params := strings.TrimSpace(fmt.Sprintf(`replace ig %v --name %v --state %v -f -`, group.ig.Metadata.Name, c.name, c.kops.stateStore))
+
+	cmd := exec.Command(c.kops.cmd, strings.Split(params, " ")...)
+
+	data, err := yaml.Marshal(group.ig)
 	if err != nil {
 		log.Println("Failed to convert to yaml")
 		return err
 	}
 	cmd.Stdin = bytes.NewBuffer(data)
-	err = cmd.Start()
+	out, err := cmd.CombinedOutput()
+
 	if err != nil {
-		log.Printf("Failed to update instancegroup %v\n %v\n", group.Metadata.Name, err)
+		log.Printf("Failed to update instancegroup %v\n %v\n", group.ig.Metadata.Name, string(out))
 		return err
 	}
-
-	_ = cmd.Wait()
+	log.Printf("Updated instance group %v\n", group.ig.Metadata.Name)
 	return nil
 }
 
-func (k kops) GetInstanceGroup(name string, clusterName string) (InstanceGroup, error) {
-	params := strings.TrimSpace(fmt.Sprintf(`get ig %v --name %v --state %v -o yaml`, name, clusterName, k.stateStore))
+func (c cluster) GetInstanceGroup(name string) (InstanceGroup, error) {
+	params := strings.TrimSpace(fmt.Sprintf(`get ig %v --name %v --state %v -o yaml`, name, c.name, c.kops.stateStore))
 
-	cmd := exec.Command(k.cmd, strings.Split(params, " ")...)
+	cmd := exec.Command(c.kops.cmd, strings.Split(params, " ")...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return InstanceGroup{}, err
 	}
-	_ = cmd.Start()
-	_ = cmd.Wait()
-
 	return parseInstanceGroup(out)
 }
 
 func parseInstanceGroup(data []byte) (InstanceGroup, error) {
-	ig := InstanceGroup{}
+	ig := instanceGroup{}
 	if err := yaml.UnmarshalStrict(data, &ig); err != nil {
 		return InstanceGroup{}, err
 	}
-	return ig, nil
+	return InstanceGroup{ig}, nil
 }

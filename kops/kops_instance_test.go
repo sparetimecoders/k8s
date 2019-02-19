@@ -34,7 +34,7 @@ spec:
 
 	parsed, _ := parseInstanceGroup([]byte(ig))
 
-	assert.Equal(t, "nodes", parsed.Metadata.Name)
+	assert.Equal(t, "nodes", parsed.ig.Metadata.Name)
 }
 /*
 func TestGetInstanceGroup(t *testing.T) {

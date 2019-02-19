@@ -11,17 +11,23 @@ import (
 	"strings"
 )
 
+type cluster struct {
+	name string
+	kops kops
+}
+
 type kops struct {
 	stateStore string
-	cmd string
+	cmd        string
+	debug      bool
 }
 
 func New(stateStore string) kops {
-	k := kops{stateStore, "kops"}
+	k := kops{stateStore, "kops", false}
 	return k
 }
 
-func (k kops) CreateCluster(config config.Cluster) error {
+func (k kops) CreateCluster(config config.ClusterConfig) (cluster, error) {
 	if ok := k.minimumKopsVersionInstalled(config.KubernetesVersion); ok == false {
 		log.Fatalf("Installed version of kops can't handle requested kubernetes version (%s)", config.KubernetesVersion)
 	}
@@ -77,13 +83,19 @@ func (k kops) CreateCluster(config config.Cluster) error {
 	_ = cmd.Start()
 
 	go func() {
-		printOut(out)
+		if k.debug {
+			k.printOut(out)
+		}
 	}()
 	go func() {
-		printOut(err)
+		k.printOut(err)
 	}()
 
-	return cmd.Wait()
+	e := cmd.Wait()
+	if e != nil {
+		return cluster{}, e
+	}
+	return cluster{name, k}, nil
 }
 
 func (k kops) getKopsVersion() (string, error) {
@@ -113,7 +125,7 @@ func (k kops) minimumKopsVersionInstalled(requiredKopsVersion string) bool {
 	return v.Major() >= r.Major() && v.Minor() >= r.Minor()
 }
 
-func printOut(out io.ReadCloser) {
+func (k kops) printOut(out io.ReadCloser) {
 	scanner := bufio.NewScanner(out)
 	scanner.Split(bufio.ScanLines)
 
@@ -121,4 +133,3 @@ func printOut(out io.ReadCloser) {
 		log.Println(scanner.Text())
 	}
 }
-
