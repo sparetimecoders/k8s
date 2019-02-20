@@ -71,7 +71,7 @@ func handleDefaultValues(t reflect.Value, missingFields *[]string, prefix string
 			} else if defaultValue == "" {
 				*missingFields = append(*missingFields, name)
 			} else {
-				log.Printf("Setting default value for field '%s' = '%s'\n", name, defaultValue)
+				log.Printf("Setting default value for field '%s' = '%s'", name, defaultValue)
 				if err := set(value, name, defaultValue, missingFields); err != nil {
 					return err
 				}

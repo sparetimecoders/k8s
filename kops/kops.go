@@ -2,6 +2,7 @@ package kops
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"github.com/Masterminds/semver"
 	"gitlab.com/sparetimecoders/k8s-go/config"
@@ -11,11 +12,6 @@ import (
 	"strings"
 )
 
-type Cluster struct {
-	name string
-	kops kops
-}
-
 type kops struct {
 	stateStore string
 	cmd        string
@@ -23,12 +19,43 @@ type kops struct {
 }
 
 func New(stateStore string) kops {
-	k := kops{stateStore, "kops", false}
+	k := kops{stateStore, "kops", true}
 	return k
 }
-func GetCluster(name string,stateStore string) Cluster {
-	return Cluster{name, New(stateStore)}
+
+func (k kops) QueryCmd(paramString string, stdInData []byte) ([]byte, error) {
+	cmd := exec.Command(k.cmd, k.buildParams(paramString)...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return []byte{}, err
+	}
+	return out,nil
 }
+
+func (k kops) RunCmd(paramString string, stdInData []byte) error {
+	cmd := exec.Command(k.cmd, k.buildParams(paramString)...)
+
+	if stdInData != nil {
+		cmd.Stdin = bytes.NewBuffer(stdInData)
+	}
+
+	out, _ := cmd.StdoutPipe()
+	err, _ := cmd.StderrPipe()
+
+	_ = cmd.Start()
+
+	go func() {
+		if k.debug {
+			k.printOut(out)
+		}
+	}()
+	go func() {
+		k.printOut(err)
+	}()
+
+	return cmd.Wait()
+}
+
 func (k kops) CreateCluster(config config.ClusterConfig) (Cluster, error) {
 	if ok := k.minimumKopsVersionInstalled(config.KubernetesVersion); ok == false {
 		log.Fatalf("Installed version of kops can't handle requested kubernetes version (%s)", config.KubernetesVersion)
@@ -43,7 +70,7 @@ func (k kops) CreateCluster(config config.ClusterConfig) (Cluster, error) {
 	for k, v := range config.CloudLabels {
 		cloudLabels = append(cloudLabels, fmt.Sprintf("%s=%s", k, v))
 	}
-	params := strings.TrimSpace(strings.Replace(fmt.Sprintf(`create cluster
+	params := fmt.Sprintf(`create cluster
 --name=%s
 --node-count %d
 --zones %s
@@ -61,7 +88,6 @@ func (k kops) CreateCluster(config config.ClusterConfig) (Cluster, error) {
 --cloud-labels %s
 --network-cidr %s
 --kubernetes-version=%s
---state=%s
 `,
 		name,
 		config.Nodes.Max,
@@ -74,34 +100,22 @@ func (k kops) CreateCluster(config config.ClusterConfig) (Cluster, error) {
 		strings.Join(cloudLabels, ","),
 		config.NetworkCIDR,
 		config.KubernetesVersion,
-		k.stateStore,
-	),
-		"\n", " ", -1))
-	cmd := exec.Command(k.cmd, strings.Split(params, " ")...)
+	)
 
-	out, _ := cmd.StdoutPipe()
-	err, _ := cmd.StderrPipe()
-
-	_ = cmd.Start()
-
-	go func() {
-		if k.debug {
-			k.printOut(out)
-		}
-	}()
-	go func() {
-		k.printOut(err)
-	}()
-
-	e := cmd.Wait()
+	e := k.RunCmd(params, nil)
 	if e != nil {
 		return Cluster{}, e
 	}
 	return Cluster{name, k}, nil
 }
 
-func (k kops) getKopsVersion() (string, error) {
+func (k kops) buildParams(paramString string) []string {
+	stateStore := []string{"--state", k.stateStore}
+	return append(stateStore, strings.Split(strings.TrimSpace(
+		strings.Replace(paramString, "\n", " ", -1)), " ")...)
+}
 
+func (k kops) getKopsVersion() (string, error) {
 	cmd := exec.Command(k.cmd, "version")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -117,7 +131,7 @@ func (k kops) getKopsVersion() (string, error) {
 func (k kops) minimumKopsVersionInstalled(requiredKopsVersion string) bool {
 	version, err := k.getKopsVersion()
 	if err != nil {
-		log.Printf("Failed to get kops version %s\n", err)
+		log.Printf("Failed to get kops version %s", err)
 		return false
 	}
 
