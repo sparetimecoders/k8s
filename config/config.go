@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -70,7 +71,7 @@ func handleDefaultValues(t reflect.Value, missingFields *[]string, prefix string
 			} else if defaultValue == "" {
 				*missingFields = append(*missingFields, name)
 			} else {
-				fmt.Printf("Setting default value for field '%s' = '%s'\n", name, defaultValue)
+				log.Printf("Setting default value for field '%s' = '%s'\n", name, defaultValue)
 				if err := set(value, name, defaultValue, missingFields); err != nil {
 					return err
 				}

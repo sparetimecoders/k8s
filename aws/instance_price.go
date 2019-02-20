@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/pricing"
+	"log"
 	"strconv"
 )
 
@@ -22,6 +23,7 @@ func (awsSvc awsService) OnDemandPrice(instanceType string, region string) (floa
 	if err != nil {
 		return -1, err
 	}
+	log.Println(out)
 	return findPriceInUSD(out.PriceList[0]["terms"].(map[string]interface{})["OnDemand"].(map[string]interface{}))
 }
 
@@ -71,19 +73,34 @@ func findPriceInUSD(m map[string]interface{}) (float64, error) {
 	if err != nil {
 		return -1, err
 	}
-	return strconv.ParseFloat(price.(map[string]interface{})["USD"].(string), 64)
+	usdPrice := price.(map[string]interface{})["USD"].(string)
+	if usdPrice == "" {
+		return -1, errors.New("empty string for price")
+	}
+	return strconv.ParseFloat(usdPrice, 64)
 }
 
 func findKey(key string, m map[string]interface{}) (interface{}, error) {
+	found := recursiveFind(key,m )
+	if found != nil {
+		return found, nil
+	}
+	return nil, errors.New(fmt.Sprintf("Failed to findKey key: %v", key))
+}
+
+func recursiveFind(key string, m map[string]interface{}) interface{} {
 	for k, v := range m {
 		if k == key {
-			return m[k], nil
+			return m[k]
 		} else {
 			switch v.(type) {
 			case map[string]interface{}:
-				return findKey(key, m[k].(map[string]interface{}))
+				found := recursiveFind(key, m[k].(map[string]interface{}))
+				if found != nil {
+					return found
+				}
 			}
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Failed to findKey key: %v", key))
+	return nil
 }

@@ -36,6 +36,23 @@ spec:
 
 	assert.Equal(t, "nodes", parsed.ig.Metadata.Name)
 }
+
+func TestUpdatePrice(t *testing.T) {
+	ig := `
+spec:
+  maxSize: 0
+  minSize: 0
+  nodeLabels:
+    kops.k8s.io/instancegroup: nodes
+  role: Node
+  subnets:
+  - eu-west-1a
+`
+	parsed, _ := parseInstanceGroup([]byte(ig))
+	assert.Equal(t, "1.1000", parsed.MaxPrice(1.1).ig.Spec.MaxPrice)
+
+}
+
 /*
 func TestGetInstanceGroup(t *testing.T) {
 	kopsSvc := New("s3://k8s.sparetimecoders.com-kops-storage")

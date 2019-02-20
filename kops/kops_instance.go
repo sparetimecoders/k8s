@@ -46,17 +46,27 @@ func (ig InstanceGroup) MinSize(n int) InstanceGroup {
 }
 
 func (ig InstanceGroup) MaxPrice(price float64) InstanceGroup {
-	ig.ig.Spec.MaxPrice = fmt.Sprintf("%f", price)
+	ig.ig.Spec.MaxPrice = fmt.Sprintf("%.4f", price)
 	return ig
 }
 
-func (c cluster) UpdateInstanceGroup(group InstanceGroup) error {
+func (ig InstanceGroup) AutoScale() InstanceGroup {
+	if ig.ig.Spec.CloudLabels == nil {
+		ig.ig.Spec.CloudLabels = make(map[string]string)
+	}
+	ig.ig.Spec.CloudLabels["k8s.io/cluster-autoscaler/enabled"] = "true"
+	ig.ig.Spec.CloudLabels[fmt.Sprintf("k8s.io/cluster-autoscaler/%v", ig.ig.Metadata.Labels["kops.k8s.io/cluster"])] = "true"
+	return ig
+}
+
+func (c Cluster) UpdateInstanceGroup(group InstanceGroup) error {
 	log.Printf("Updating instance group %v\n", group.ig.Metadata.Name)
 	params := strings.TrimSpace(fmt.Sprintf(`replace ig %v --name %v --state %v -f -`, group.ig.Metadata.Name, c.name, c.kops.stateStore))
 
 	cmd := exec.Command(c.kops.cmd, strings.Split(params, " ")...)
 
 	data, err := yaml.Marshal(group.ig)
+
 	if err != nil {
 		log.Println("Failed to convert to yaml")
 		return err
@@ -72,7 +82,7 @@ func (c cluster) UpdateInstanceGroup(group InstanceGroup) error {
 	return nil
 }
 
-func (c cluster) GetInstanceGroup(name string) (InstanceGroup, error) {
+func (c Cluster) GetInstanceGroup(name string) (InstanceGroup, error) {
 	params := strings.TrimSpace(fmt.Sprintf(`get ig %v --name %v --state %v -o yaml`, name, c.name, c.kops.stateStore))
 
 	cmd := exec.Command(c.kops.cmd, strings.Split(params, " ")...)

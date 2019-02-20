@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-type cluster struct {
+type Cluster struct {
 	name string
 	kops kops
 }
@@ -26,8 +26,10 @@ func New(stateStore string) kops {
 	k := kops{stateStore, "kops", false}
 	return k
 }
-
-func (k kops) CreateCluster(config config.ClusterConfig) (cluster, error) {
+func GetCluster(name string,stateStore string) Cluster {
+	return Cluster{name, New(stateStore)}
+}
+func (k kops) CreateCluster(config config.ClusterConfig) (Cluster, error) {
 	if ok := k.minimumKopsVersionInstalled(config.KubernetesVersion); ok == false {
 		log.Fatalf("Installed version of kops can't handle requested kubernetes version (%s)", config.KubernetesVersion)
 	}
@@ -93,9 +95,9 @@ func (k kops) CreateCluster(config config.ClusterConfig) (cluster, error) {
 
 	e := cmd.Wait()
 	if e != nil {
-		return cluster{}, e
+		return Cluster{}, e
 	}
-	return cluster{name, k}, nil
+	return Cluster{name, k}, nil
 }
 
 func (k kops) getKopsVersion() (string, error) {
