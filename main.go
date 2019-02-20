@@ -1,49 +1,40 @@
 package main
 
 import (
-	"fmt"
-	"gitlab.com/sparetimecoders/k8s-go/aws"
-	"gitlab.com/sparetimecoders/k8s-go/config"
-	"gitlab.com/sparetimecoders/k8s-go/kops"
-	"gopkg.in/yaml.v2"
-	"log"
+  "flag"
+  "fmt"
+  "gitlab.com/sparetimecoders/k8s-go/aws"
+  "gitlab.com/sparetimecoders/k8s-go/config"
+  "gitlab.com/sparetimecoders/k8s-go/kops"
+  "log"
 )
 
-func main() {
-	// TODO Build statestore from config if not supplied?
-	// TODO statestore part of config.ClusterConfig ?
-
-	if parsed, err := yaml.Marshal(config.ClusterConfig{
-		Name:        "peter",
-		DnsZone:     "sparetimecoders.com",
-		MasterZones: []string{"a"},
-		Nodes: config.Nodes{
-			InstanceType: "m5.large",
-			Max:          2,
-			Min:          1,
-		},
-		MasterInstanceType: "m5.large",
-	}); err == nil {
-		c, err := config.ParseConfig(parsed)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		kops := kops.New("s3://k8s.sparetimecoders.com-kops-storage")
-		cluster, err := kops.CreateCluster(c)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		//cluster := kops.GetCluster("peter.sparetimecoders.com", "s3://k8s.sparetimecoders.com-kops-storage")
-		setNodeInstanceGroupToSpotPricesAndSize(cluster, c)
-		setMasterInstanceGroupsToSpotPricesAndSize(cluster, c)
-		cluster.CreateClusterResources()
-	}
-
+type args struct {
+  Filename *string
+  UseStdin bool
 }
 
+func main() {
+  args := parseArgs()
 
+  // TODO Build statestore from config if not supplied?
+	// TODO statestore part of config.ClusterConfig ?
+
+	if c, err := loadConfig(args); err != nil {
+      log.Fatal(err)
+  } else {
+    kops := kops.New("s3://k8s.sparetimecoders.com-kops-storage")
+    cluster, err := kops.CreateCluster(c)
+    if err != nil {
+      log.Fatal(err)
+    }
+
+    //cluster := kops.GetCluster("peter.sparetimecoders.com", "s3://k8s.sparetimecoders.com-kops-storage")
+    setNodeInstanceGroupToSpotPricesAndSize(cluster, c)
+    setMasterInstanceGroupsToSpotPricesAndSize(cluster, c)
+    cluster.CreateClusterResources()
+  }
+}
 
 func setNodeInstanceGroupToSpotPricesAndSize(cluster kops.Cluster, config config.ClusterConfig) {
 	price := instancePrice(config.Nodes.InstanceType, config.Region)
@@ -82,4 +73,24 @@ func setInstanceGroupToSpotPricesAndSize(cluster kops.Cluster, igName string, mi
 	if err != nil {
 		log.Fatalf("Failed to update instancegroup %v, %v", igName, err)
 	}
+}
+
+func loadConfig(a args) (config.ClusterConfig, error) {
+  if a.UseStdin {
+    return config.ParseConfigStdin()
+  } else {
+    return config.ParseConfigFile(*a.Filename)
+  }
+}
+
+func parseArgs() args {
+  args := args{
+    Filename: flag.String("f", "-", "-f <filename>"),
+  }
+
+  flag.Parse()
+
+  args.UseStdin = *args.Filename == "-"
+
+  return args
 }

@@ -1,11 +1,13 @@
 package config
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -32,6 +34,14 @@ type ClusterConfig struct {
 
 func ParseConfigFile(file string) (ClusterConfig, error) {
 	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		return ClusterConfig{}, err
+	}
+	return ParseConfig(data)
+}
+
+func ParseConfigStdin() (ClusterConfig, error) {
+	data, err := ioutil.ReadAll(bufio.NewReader(os.Stdin))
 	if err != nil {
 		return ClusterConfig{}, err
 	}
