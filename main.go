@@ -13,7 +13,6 @@ func main() {
 	// TODO Build statestore from config if not supplied?
 	// TODO statestore part of config.ClusterConfig ?
 
-	//kops := kops.New("s3://k8s.sparetimecoders.com-kops-storage")
 	if parsed, err := yaml.Marshal(config.ClusterConfig{
 		Name:        "peter",
 		DnsZone:     "sparetimecoders.com",
@@ -23,19 +22,23 @@ func main() {
 			Max:          2,
 			Min:          1,
 		},
+		MasterInstanceType: "m5.large",
 	}); err == nil {
 		c, err := config.ParseConfig(parsed)
 		if err != nil {
 			log.Fatal(err)
 		}
-		/*cluster, err := kops.CreateCluster(c)
+
+		kops := kops.New("s3://k8s.sparetimecoders.com-kops-storage")
+		cluster, err := kops.CreateCluster(c)
 		if err != nil {
 			log.Fatal(err)
 		}
-		*/
-		cluster := kops.GetCluster("peter.sparetimecoders.com", "s3://k8s.sparetimecoders.com-kops-storage")
+
+		//cluster := kops.GetCluster("peter.sparetimecoders.com", "s3://k8s.sparetimecoders.com-kops-storage")
 		setNodeInstanceGroupToSpotPricesAndSize(cluster, c)
 		setMasterInstanceGroupsToSpotPricesAndSize(cluster, c)
+		cluster.CreateClusterResources()
 	}
 
 }
@@ -59,7 +62,7 @@ func instancePrice(instanceType string, region string) float64 {
 	awsSvc := aws.New()
 	price, err := awsSvc.OnDemandPrice(instanceType, region)
 	if err != nil {
-		log.Fatalf("Failed to get price for instancetype, %v, %v\n", instanceType, err)
+		log.Fatalf("Failed to get price for instancetype, %v, %v", instanceType, err)
 	}
 	log.Printf("Got price %v for instancetype %v", price, instanceType)
 	return price
@@ -68,7 +71,7 @@ func instancePrice(instanceType string, region string) float64 {
 func setInstanceGroupToSpotPricesAndSize(cluster kops.Cluster, igName string, min int, max int, price float64, autoScale bool) {
 	group, err := cluster.GetInstanceGroup(igName)
 	if err != nil {
-		log.Fatalf("Failed to get instancegroup %v, %v\n", igName, err)
+		log.Fatalf("Failed to get instancegroup %v, %v", igName, err)
 	}
 
 	group = group.MinSize(min).MaxSize(max).MaxPrice(price)
@@ -77,6 +80,6 @@ func setInstanceGroupToSpotPricesAndSize(cluster kops.Cluster, igName string, mi
 	}
 	err = cluster.UpdateInstanceGroup(group)
 	if err != nil {
-		log.Fatalf("Failed to update instancegroup %v, %v\n", igName, err)
+		log.Fatalf("Failed to update instancegroup %v, %v", igName, err)
 	}
 }

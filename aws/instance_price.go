@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/pricing"
-	"log"
 	"strconv"
 )
 
@@ -23,7 +22,6 @@ func (awsSvc awsService) OnDemandPrice(instanceType string, region string) (floa
 	if err != nil {
 		return -1, err
 	}
-	log.Println(out)
 	return findPriceInUSD(out.PriceList[0]["terms"].(map[string]interface{})["OnDemand"].(map[string]interface{}))
 }
 

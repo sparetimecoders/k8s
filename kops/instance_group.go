@@ -1,12 +1,9 @@
 package kops
 
 import (
-	"bytes"
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"log"
-	"os/exec"
-	"strings"
 	"time"
 )
 
@@ -61,32 +58,28 @@ func (ig InstanceGroup) AutoScale() InstanceGroup {
 
 func (c Cluster) UpdateInstanceGroup(group InstanceGroup) error {
 	log.Printf("Updating instance group %v\n", group.ig.Metadata.Name)
-	params := strings.TrimSpace(fmt.Sprintf(`replace ig %v --name %v --state %v -f -`, group.ig.Metadata.Name, c.name, c.kops.stateStore))
-
-	cmd := exec.Command(c.kops.cmd, strings.Split(params, " ")...)
+	params := fmt.Sprintf(`replace ig %v --name %v -f -`, group.ig.Metadata.Name, c.name)
 
 	data, err := yaml.Marshal(group.ig)
-
 	if err != nil {
-		log.Println("Failed to convert to yaml")
+		log.Printf("Failed to mashall instancegroup %v", err)
 		return err
 	}
-	cmd.Stdin = bytes.NewBuffer(data)
-	out, err := cmd.CombinedOutput()
+
+	err = c.kops.RunCmd(params, data)
 
 	if err != nil {
-		log.Printf("Failed to update instancegroup %v\n %v\n", group.ig.Metadata.Name, string(out))
+		log.Printf("Failed to update instancegroup %v\n", group.ig.Metadata.Name)
 		return err
 	}
-	log.Printf("Updated instance group %v\n", group.ig.Metadata.Name)
+	log.Printf("Updated instance group %v", group.ig.Metadata.Name)
 	return nil
 }
 
 func (c Cluster) GetInstanceGroup(name string) (InstanceGroup, error) {
-	params := strings.TrimSpace(fmt.Sprintf(`get ig %v --name %v --state %v -o yaml`, name, c.name, c.kops.stateStore))
+	params := fmt.Sprintf(`get ig %v --name %v -o yaml`, name, c.name)
 
-	cmd := exec.Command(c.kops.cmd, strings.Split(params, " ")...)
-	out, err := cmd.CombinedOutput()
+	out, err := c.kops.QueryCmd(params, nil)
 	if err != nil {
 		return InstanceGroup{}, err
 	}
