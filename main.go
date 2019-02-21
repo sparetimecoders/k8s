@@ -25,6 +25,9 @@ func main() {
   if *args.Version {
     fmt.Printf("Version: %s, GitCommit: %s, GitBranch: %s, BuildDate: %s\n", Version, GitCommit, GitBranch, BuildDate)
     os.Exit(0)
+  } else if args.UseStdin == false && *args.Filename == "" {
+    flag.Usage()
+    os.Exit(1)
   }
 
   // TODO Build statestore from config if not supplied?
@@ -95,8 +98,8 @@ func loadConfig(a args) (config.ClusterConfig, error) {
 
 func parseArgs() args {
   args := args{
-    Filename: flag.String("f", "-", "-f <filename>"),
-    Version: flag.Bool("v", false, ""),
+    Filename: flag.String("f", "", "filename to load, use - for stdin"),
+    Version: flag.Bool("v", false, "print version info"),
   }
 
   flag.Parse()
