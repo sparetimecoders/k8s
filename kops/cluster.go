@@ -8,10 +8,11 @@ import (
 type Cluster struct {
 	name string
 	kops kops
+	_ struct{}
 }
 
 func GetCluster(name string,stateStore string) Cluster {
-	return Cluster{name, New(stateStore)}
+	return Cluster{name: name, kops: New(stateStore)}
 }
 
 func (c Cluster) CreateClusterResources() error {

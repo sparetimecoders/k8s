@@ -9,6 +9,7 @@ import (
 
 type InstanceGroup struct {
 	ig instanceGroup
+	_ struct{}
 }
 
 type instanceGroup struct {
@@ -91,5 +92,5 @@ func parseInstanceGroup(data []byte) (InstanceGroup, error) {
 	if err := yaml.UnmarshalStrict(data, &ig); err != nil {
 		return InstanceGroup{}, err
 	}
-	return InstanceGroup{ig}, nil
+	return InstanceGroup{ig: ig}, nil
 }

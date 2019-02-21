@@ -1,52 +1,73 @@
 package main
 
 import (
-  "flag"
-  "fmt"
-  "gitlab.com/sparetimecoders/k8s-go/aws"
-  "gitlab.com/sparetimecoders/k8s-go/config"
-  "gitlab.com/sparetimecoders/k8s-go/kops"
-  "log"
-  "os"
+	"bufio"
+	"flag"
+	"fmt"
+	"gitlab.com/sparetimecoders/k8s-go/aws"
+	"gitlab.com/sparetimecoders/k8s-go/config"
+	"gitlab.com/sparetimecoders/k8s-go/kops"
+	"log"
+	"os"
 )
 
 var GitCommit, GitBranch, BuildDate, Version string
 
 type args struct {
-  Filename *string
-  UseStdin bool
-  Version *bool
-  _ struct{}
+	Filename *string
+	UseStdin bool
+	Version  *bool
+	_        struct{}
 }
 
 func main() {
-  args := parseArgs()
+	args := parseArgs()
 
-  if *args.Version {
-    fmt.Printf("Version: %s, GitCommit: %s, GitBranch: %s, BuildDate: %s\n", Version, GitCommit, GitBranch, BuildDate)
-    os.Exit(0)
-  } else if args.UseStdin == false && *args.Filename == "" {
-    flag.Usage()
-    os.Exit(1)
-  }
-
-  // TODO Build statestore from config if not supplied?
-	// TODO statestore part of config.ClusterConfig ?
+	if *args.Version {
+		fmt.Printf("Version: %s, GitCommit: %s, GitBranch: %s, BuildDate: %s\n", Version, GitCommit, GitBranch, BuildDate)
+		os.Exit(0)
+	} else if args.UseStdin == false && *args.Filename == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
 
 	if c, err := loadConfig(args); err != nil {
-      log.Fatal(err)
-  } else {
-    kops := kops.New("s3://k8s.sparetimecoders.com-kops-storage")
-    cluster, err := kops.CreateCluster(c)
-    if err != nil {
-      log.Fatal(err)
-    }
+		log.Fatal(err)
+	} else {
+		stateStore := getStateStore(c)
+		awsSvc := aws.New(c.Region)
+		if awsSvc.ClusterExist(c) {
+			log.Fatalf("Cluster %v already exists", c.ClusterName())
+		}
+		k := kops.New(stateStore)
+		cluster, err := k.CreateCluster(c)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-    //cluster := kops.GetCluster("peter.sparetimecoders.com", "s3://k8s.sparetimecoders.com-kops-storage")
-    setNodeInstanceGroupToSpotPricesAndSize(cluster, c)
-    setMasterInstanceGroupsToSpotPricesAndSize(cluster, c)
-    _ = cluster.CreateClusterResources()
-  }
+		setNodeInstanceGroupToSpotPricesAndSize(cluster, c)
+		setMasterInstanceGroupsToSpotPricesAndSize(cluster, c)
+		cluster.CreateClusterResources()
+	}
+}
+
+func getStateStore(c config.ClusterConfig) string {
+	awsSvc := aws.New(c.Region)
+	bucketName := awsSvc.StateStoreBucketName(c.DnsZone)
+	if awsSvc.StateStoreBucketExist(c.DnsZone) {
+		fmt.Printf("Using existing statestore: %v \n", bucketName)
+	} else {
+		fmt.Printf("No statestore S3 bucket found with name: %v \n", bucketName)
+		fmt.Print("Continue and create statestore (y/N): ")
+		reader := bufio.NewReader(os.Stdin)
+		if r, _, _ := reader.ReadRune(); r == 'y' || r == 'Y' {
+			awsSvc.CreateStateStoreBucket(c.DnsZone)
+		} else {
+			log.Fatalln("Aborting...")
+		}
+	}
+
+	return bucketName
 }
 
 func setNodeInstanceGroupToSpotPricesAndSize(cluster kops.Cluster, config config.ClusterConfig) {
@@ -89,22 +110,21 @@ func setInstanceGroupToSpotPricesAndSize(cluster kops.Cluster, igName string, mi
 }
 
 func loadConfig(a args) (config.ClusterConfig, error) {
-  if a.UseStdin {
-    return config.ParseConfigStdin()
-  } else {
-    return config.ParseConfigFile(*a.Filename)
-  }
+	if a.UseStdin {
+		return config.ParseConfigStdin()
+	} else {
+		return config.ParseConfigFile(*a.Filename)
+	}
 }
 
 func parseArgs() args {
-  args := args{
-    Filename: flag.String("f", "", "filename to load, use - for stdin"),
-    Version: flag.Bool("v", false, "print version info"),
-  }
+	args := args{
+		Filename: flag.String("f", "", "filename to load, use - for stdin"),
+		Version:  flag.Bool("v", false, "print version info"),
+	}
+	flag.Parse()
 
-  flag.Parse()
+	args.UseStdin = *args.Filename == "-"
 
-  args.UseStdin = *args.Filename == "-"
-
-  return args
+	return args
 }
