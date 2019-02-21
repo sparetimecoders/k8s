@@ -43,8 +43,11 @@ build:
     - deps
   image: eugenmayer/golang-builder:1.11
   script:
+    - go get github.com/gobuffalo/packr/v2/packr2
     - go get github.com/ahmetb/govvv
+    - packr2
     - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 govvv build -o release/k8s-go -ldflags '-w -s'
+    - packr2 clean
   artifacts:
     paths:
       - release/

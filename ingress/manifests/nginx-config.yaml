@@ -1,0 +1,18 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: nginx-configuration
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+data:
+  server-names-hash-bucket-size: "128"
+  proxy-buffers: "128 8k"
+  proxy-buffer-size: "256k"
+  large-client-header-buffers: "8 32k"
+  use-http2: "false"
+  proxy-body-size: "100m"
+  enable-vts-status: "true"
+  http-redirect-code: "301"
+  use-proxy-protocol: "false"
