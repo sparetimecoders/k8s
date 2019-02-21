@@ -32,6 +32,10 @@ type ClusterConfig struct {
 	SshKeyPath         string            `yaml:"sshKeyPath" default:"~/.ssh/id_rsa.pub"`
 }
 
+func (config ClusterConfig) ClusterName() string {
+	return fmt.Sprintf("%s.%s", config.Name, config.DnsZone)
+}
+
 func ParseConfigFile(file string) (ClusterConfig, error) {
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
