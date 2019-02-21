@@ -7,15 +7,25 @@ import (
   "gitlab.com/sparetimecoders/k8s-go/config"
   "gitlab.com/sparetimecoders/k8s-go/kops"
   "log"
+  "os"
 )
+
+var GitCommit, GitBranch, BuildDate, Version string
 
 type args struct {
   Filename *string
   UseStdin bool
+  Version *bool
+  _ struct{}
 }
 
 func main() {
   args := parseArgs()
+
+  if *args.Version {
+    fmt.Printf("Version: %s, GitCommit: %s, GitBranch: %s, BuildDate: %s\n", Version, GitCommit, GitBranch, BuildDate)
+    os.Exit(0)
+  }
 
   // TODO Build statestore from config if not supplied?
 	// TODO statestore part of config.ClusterConfig ?
@@ -32,7 +42,7 @@ func main() {
     //cluster := kops.GetCluster("peter.sparetimecoders.com", "s3://k8s.sparetimecoders.com-kops-storage")
     setNodeInstanceGroupToSpotPricesAndSize(cluster, c)
     setMasterInstanceGroupsToSpotPricesAndSize(cluster, c)
-    cluster.CreateClusterResources()
+    _ = cluster.CreateClusterResources()
   }
 }
 
@@ -86,6 +96,7 @@ func loadConfig(a args) (config.ClusterConfig, error) {
 func parseArgs() args {
   args := args{
     Filename: flag.String("f", "-", "-f <filename>"),
+    Version: flag.Bool("v", false, ""),
   }
 
   flag.Parse()

@@ -1,7 +1,6 @@
 variables:
   PACKAGE_PATH: /go/src/gitlab.com/sparetimecoders/k8s-go
 
-
 # A hack to make Golang-in-Gitlab happy
 before_script:
   - mkdir -p $(dirname ${PACKAGE_PATH})
@@ -44,9 +43,8 @@ build:
     - deps
   image: eugenmayer/golang-builder:1.11
   script:
-    - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o release/k8s-go -ldflags '-w -s'
+    - go get github.com/ahmetb/govvv
+    - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 govvv build -o release/k8s-go -ldflags '-w -s'
   artifacts:
     paths:
       - release/
-
-
