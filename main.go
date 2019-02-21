@@ -50,8 +50,8 @@ func setMasterInstanceGroupsToSpotPricesAndSize(cluster kops.Cluster, config con
 }
 
 func instancePrice(instanceType string, region string) float64 {
-	awsSvc := aws.New()
-	price, err := awsSvc.OnDemandPrice(instanceType, region)
+	awsSvc := aws.New(region)
+	price, err := awsSvc.OnDemandPrice(instanceType)
 	if err != nil {
 		log.Fatalf("Failed to get price for instancetype, %v, %v", instanceType, err)
 	}
