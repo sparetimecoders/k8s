@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"gitlab.com/sparetimecoders/k8s-go/aws"
 	"gitlab.com/sparetimecoders/k8s-go/config"
+	"gitlab.com/sparetimecoders/k8s-go/ingress"
 	"gitlab.com/sparetimecoders/k8s-go/kops"
 	"log"
 	"os"
@@ -34,8 +35,11 @@ func main() {
 	if c, err := loadConfig(args); err != nil {
 		log.Fatal(err)
 	} else {
+		//kops.GetCluster("peter.sparetimecoders.com", "s3://k8s.sparetimecoders.com-kops-storage").WaitForValidState(180)
+		//os.Exit(1)
 		stateStore := getStateStore(c)
 		awsSvc := aws.New(c.Region)
+
 		if awsSvc.ClusterExist(c) {
 			log.Fatalf("Cluster %v already exists", c.ClusterName())
 		}
@@ -48,6 +52,15 @@ func main() {
 		setNodeInstanceGroupToSpotPricesAndSize(cluster, c)
 		setMasterInstanceGroupsToSpotPricesAndSize(cluster, c)
 		cluster.CreateClusterResources()
+		// Wait for completion/valid cluster...
+		cluster.WaitForValidState(500)
+
+		// Add-ons
+
+		if (c.Ingress != ingress.Ingress{}) {
+			fmt.Println("Ingress configured")
+			c.Ingress.Create()
+		}
 	}
 }
 
