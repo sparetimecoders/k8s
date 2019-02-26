@@ -27,11 +27,19 @@ ingress:create() {
 
 }
 */
+type Ingress struct {
+  AwsCertificate struct {
+    AwsSecurityPolicy string `yaml:"awsSecurityPolicy" default:"ELBSecurityPolicy-TLS-1-2-2017-01"`
+    AwsCertificateARN string `yaml:"awsCertificateARN" default:""`
+  } `yaml:"awsCertificate"`
+}
 
-func Create() {
+func (ingress Ingress) Create() {
+  log.Println("Creating ingress from configuration")
+  
   box := packr.New("Manifests", "./manifests")
   
-  b, _:= box.FindString("ingress.yaml")
+  b, _ := box.FindString("ingress.yaml")
 
   log.Println(b)
   
