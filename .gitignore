@@ -2,3 +2,5 @@ vendor
 .idea
 config.yaml
 k8s-go
+*.iml
+_go
