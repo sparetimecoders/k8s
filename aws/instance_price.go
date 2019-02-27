@@ -79,7 +79,7 @@ func findPriceInUSD(m map[string]interface{}) (float64, error) {
 }
 
 func findKey(key string, m map[string]interface{}) (interface{}, error) {
-	found := recursiveFind(key,m )
+	found := recursiveFind(key, m)
 	if found != nil {
 		return found, nil
 	}

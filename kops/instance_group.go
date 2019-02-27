@@ -9,7 +9,7 @@ import (
 
 type InstanceGroup struct {
 	ig instanceGroup
-	_ struct{}
+	_  struct{}
 }
 
 type instanceGroup struct {

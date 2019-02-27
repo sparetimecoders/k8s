@@ -65,9 +65,6 @@ items:
         annotations:
           prometheus.io/port: "10254"
           prometheus.io/scrape: "true"
-          ad.datadoghq.com/nginx-ingress-controller.check_names: '["nginx","nginx_ingress_controller"]'
-          ad.datadoghq.com/nginx-ingress-controller.init_configs: '[{},{}]'
-          ad.datadoghq.com/nginx-ingress-controller.instances: '[{"nginx_status_url": "http://%%host%%/nginx_status"},{"prometheus_url": "http://%%host%%:10254/metrics"}]'
       spec:
         affinity:
           podAntiAffinity:
