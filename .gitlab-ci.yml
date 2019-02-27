@@ -1,16 +1,21 @@
 variables:
-  PACKAGE_PATH: /go/src/gitlab.com/sparetimecoders/k8s-go
+  PACKAGE_PATH: "/go/src/gitlab.com/sparetimecoders/k8s-go"
+  GO111MODULE: "on"
+  GOCACHE: "${CI_PROJECT_DIR}/_go/cache"
 
 # A hack to make Golang-in-Gitlab happy
 before_script:
-  - mkdir -p $(dirname ${PACKAGE_PATH})
+  - mkdir -p $(dirname ${PACKAGE_PATH}) ${CI_PROJECT_DIR}/_go/{pkg,bin,cache}
+  - rm -rf /go/pkg
   - ln -s ${CI_PROJECT_DIR} ${PACKAGE_PATH}
+  - ln -s ${CI_PROJECT_DIR}/_go/pkg /go/pkg
+  - ln -s ${CI_PROJECT_DIR}/_go/bin /go/bin
   - cd ${PACKAGE_PATH}
 
 cache:
   key: "$CI_COMMIT_REF_NAME"
   paths:
-    - vendor/
+    - _go
   untracked: true
 
 stages:
@@ -20,28 +25,25 @@ stages:
 
 deps:
   stage: deps
-  image: eugenmayer/golang-builder:1.11
+  image: golang:1.12-rc
   script:
-    - glide install -v
-  artifacts:
-    paths:
-      - vendor/
+    - go get
 
 test:
   stage: test
   dependencies:
     - deps
-  image: eugenmayer/golang-builder:1.11
+  image: golang:1.12-rc
   script:
-    - go fmt $(go list ./... | grep -v /vendor/)
-    - go vet $(go list ./... | grep -v /vendor/)
-    - CGO_ENABLED=1 go test -race $(go list ./... | grep -v /vendor/) -coverprofile .testCoverage.txt
+    - go fmt $(go list ./...)
+    - go vet $(go list ./...)
+    - CGO_ENABLED=1 go test -race $(go list ./...) -coverprofile .testCoverage.txt
 
 build:
   stage: build
   dependencies:
     - deps
-  image: eugenmayer/golang-builder:1.11
+  image: golang:1.12-rc
   script:
     - go get github.com/gobuffalo/packr/v2/packr2
     - go get github.com/ahmetb/govvv
