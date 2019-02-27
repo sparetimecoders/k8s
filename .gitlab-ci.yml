@@ -25,7 +25,7 @@ stages:
 
 deps:
   stage: deps
-  image: golang:1.12-rc
+  image: golang:1.12
   script:
     - go get
 
@@ -33,7 +33,7 @@ test:
   stage: test
   dependencies:
     - deps
-  image: golang:1.12-rc
+  image: golang:1.12
   script:
     - go fmt $(go list ./...)
     - go vet $(go list ./...)
@@ -43,13 +43,14 @@ build:
   stage: build
   dependencies:
     - deps
-  image: golang:1.12-rc
+  image: golang:1.12
   script:
-    - go get github.com/gobuffalo/packr/v2/packr2
+    - go get github.com/GeertJohan/go.rice/rice
     - go get github.com/ahmetb/govvv
-    - packr2
+    - for p in $(go list ./...); do  rice embed-go -i $p; done
+    - rice embed-go
     - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 govvv build -o release/k8s-go -ldflags '-w -s'
-    - packr2 clean
   artifacts:
     paths:
       - release/
+

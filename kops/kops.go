@@ -1,80 +1,80 @@
 package kops
 
 import (
-  "bufio"
-  "bytes"
-  "fmt"
-  "github.com/Masterminds/semver"
-  "gitlab.com/sparetimecoders/k8s-go/config"
-  "io"
-  "log"
-  "os/exec"
-  "strings"
+	"bufio"
+	"bytes"
+	"fmt"
+	"github.com/Masterminds/semver"
+	"gitlab.com/sparetimecoders/k8s-go/config"
+	"io"
+	"log"
+	"os/exec"
+	"strings"
 )
 
 type kops struct {
-  stateStore string
-  cmd        string
-  debug      bool
-  _ struct{}
+	stateStore string
+	cmd        string
+	debug      bool
+	_          struct{}
 }
 
 func New(stateStore string) kops {
-  if !strings.HasPrefix(stateStore,"s3://") {
-    stateStore = fmt.Sprintf("s3://%v", stateStore)
-  }
-  k := kops{stateStore: stateStore, cmd: "kops", debug: true}
-  return k
+	if !strings.HasPrefix(stateStore, "s3://") {
+		stateStore = fmt.Sprintf("s3://%v", stateStore)
+	}
+	k := kops{stateStore: stateStore, cmd: "kops", debug: true}
+	return k
 }
 
 func (k kops) QueryCmd(paramString string, stdInData []byte) ([]byte, error) {
-  cmd := exec.Command(k.cmd, k.buildParams(paramString)...)
-  out, err := cmd.CombinedOutput()
-  if err != nil {
-    return []byte{}, err
-  }
-  return out, nil
+	cmd := exec.Command(k.cmd, k.buildParams(paramString)...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return []byte{}, err
+	}
+	return out, nil
 }
 
 func (k kops) RunCmd(paramString string, stdInData []byte) error {
-  cmd := exec.Command(k.cmd, k.buildParams(paramString)...)
-  
-  if stdInData != nil {
-    cmd.Stdin = bytes.NewBuffer(stdInData)
-  }
-  
-  out, _ := cmd.StdoutPipe()
-  err, _ := cmd.StderrPipe()
-  
-  _ = cmd.Start()
-  
-  go func() {
-    if k.debug {
-      k.printOut(out)
-    }
-  }()
-  go func() {
-    k.printOut(err)
-  }()
-  
-  return cmd.Wait()
+	cmd := exec.Command(k.cmd, k.buildParams(paramString)...)
+
+	if stdInData != nil {
+		cmd.Stdin = bytes.NewBuffer(stdInData)
+	}
+
+	out, _ := cmd.StdoutPipe()
+	err, _ := cmd.StderrPipe()
+
+	_ = cmd.Start()
+
+	go func() {
+		if k.debug {
+			k.printOut(out)
+		}
+	}()
+	go func() {
+		k.printOut(err)
+	}()
+
+	return cmd.Wait()
 }
 
 func (k kops) CreateCluster(config config.ClusterConfig) (Cluster, error) {
-  if ok := k.minimumKopsVersionInstalled(config.KubernetesVersion); ok == false {
-    log.Fatalf("Installed version of kops can't handle requested kubernetes version (%s)", config.KubernetesVersion)
-  }
-  name := config.ClusterName()
-  zones := fmt.Sprintf("%[1]sa,%[1]sb,%[1]sc", config.Region)
-  var masterZones []string
-  for _, z := range config.MasterZones {
-    masterZones = append(masterZones, fmt.Sprintf("%s%s", config.Region, z))
-  }
-  var cloudLabels []string
-  for k, v := range config.CloudLabels {
-    cloudLabels = append(cloudLabels, fmt.Sprintf("%s=%s", k, v))
-  }
-  params := fmt.Sprintf(`create cluster
+	if ok := k.minimumKopsVersionInstalled(config.KubernetesVersion); ok == false {
+		log.Fatalf("Installed version of kops can't handle requested kubernetes version (%s)", config.KubernetesVersion)
+	}
+	name := config.ClusterName()
+	zones := fmt.Sprintf("%[1]sa,%[1]sb,%[1]sc", config.Region)
+	var masterZones []string
+	for _, z := range config.MasterZones {
+		masterZones = append(masterZones, fmt.Sprintf("%s%s", config.Region, z))
+	}
+	var cloudLabels []string
+	for k, v := range config.CloudLabels {
+		cloudLabels = append(cloudLabels, fmt.Sprintf("%s=%s", k, v))
+	}
+	params := fmt.Sprintf(`create cluster
 --name=%s
 --node-count %d
 --zones %s
@@ -93,63 +93,63 @@ func (k kops) CreateCluster(config config.ClusterConfig) (Cluster, error) {
 --network-cidr %s
 --kubernetes-version=%s
 `,
-    name,
-    config.Nodes.Max,
-    zones,
-    strings.Join(masterZones, ","),
-    config.DnsZone,
-    config.Nodes.InstanceType,
-    config.MasterInstanceType,
-    config.SshKeyPath,
-    strings.Join(cloudLabels, ","),
-    config.NetworkCIDR,
-    config.KubernetesVersion,
-  )
-  
-  e := k.RunCmd(params, nil)
-  if e != nil {
-    return Cluster{}, e
-  }
-  return Cluster{name: name, kops: k}, nil
+		name,
+		config.Nodes.Max,
+		zones,
+		strings.Join(masterZones, ","),
+		config.DnsZone,
+		config.Nodes.InstanceType,
+		config.MasterInstanceType,
+		config.SshKeyPath,
+		strings.Join(cloudLabels, ","),
+		config.NetworkCIDR,
+		config.KubernetesVersion,
+	)
+
+	e := k.RunCmd(params, nil)
+	if e != nil {
+		return Cluster{}, e
+	}
+	return Cluster{name: name, kops: k}, nil
 }
 
 func (k kops) buildParams(paramString string) []string {
-  stateStore := []string{"--state", k.stateStore}
-  return append(stateStore, strings.Split(strings.TrimSpace(
-    strings.Replace(paramString, "\n", " ", -1)), " ")...)
+	stateStore := []string{"--state", k.stateStore}
+	return append(stateStore, strings.Split(strings.TrimSpace(
+		strings.Replace(paramString, "\n", " ", -1)), " ")...)
 }
 
 func (k kops) getKopsVersion() (string, error) {
-  cmd := exec.Command(k.cmd, "version")
-  out, err := cmd.CombinedOutput()
-  if err != nil {
-    return "", err
-  }
-  _ = cmd.Start()
-  _ = cmd.Wait()
-  
-  version := strings.TrimSpace(strings.TrimLeft(string(out), "Version: "))
-  return version, nil
+	cmd := exec.Command(k.cmd, "version")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+	_ = cmd.Start()
+	_ = cmd.Wait()
+
+	version := strings.TrimSpace(strings.TrimLeft(string(out), "Version: "))
+	return version, nil
 }
 
 func (k kops) minimumKopsVersionInstalled(requiredKopsVersion string) bool {
-  version, err := k.getKopsVersion()
-  if err != nil {
-    log.Printf("Failed to get kops version %s", err)
-    return false
-  }
-  
-  v, _ := semver.NewVersion(version)
-  r, _ := semver.NewVersion(requiredKopsVersion)
-  
-  return v.Major() >= r.Major() && v.Minor() >= r.Minor()
+	version, err := k.getKopsVersion()
+	if err != nil {
+		log.Printf("Failed to get kops version %s", err)
+		return false
+	}
+
+	v, _ := semver.NewVersion(version)
+	r, _ := semver.NewVersion(requiredKopsVersion)
+
+	return v.Major() >= r.Major() && v.Minor() >= r.Minor()
 }
 
 func (k kops) printOut(out io.ReadCloser) {
-  scanner := bufio.NewScanner(out)
-  scanner.Split(bufio.ScanLines)
-  
-  for scanner.Scan() {
-    log.Println(scanner.Text())
-  }
+	scanner := bufio.NewScanner(out)
+	scanner.Split(bufio.ScanLines)
+
+	for scanner.Scan() {
+		log.Println(scanner.Text())
+	}
 }

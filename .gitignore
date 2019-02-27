@@ -4,3 +4,4 @@ config.yaml
 k8s-go
 *.iml
 _go
+rice-box.go
