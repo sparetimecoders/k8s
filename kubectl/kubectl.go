@@ -18,23 +18,23 @@ func New(context string) kubectl {
 }
 
 func (k kubectl) GetPods(namespace string) string {
-	var ns []string
-	if namespace != "" {
-		ns = []string{"--namespace", namespace}
-	}
-	params := append(ns, "get", "pod")
+	params := append(k.ns(namespace), "get", "pod")
 	res, _ := k.runCmd(params, nil)
 	return res
 }
 
 func (k kubectl) Apply(namespace string, content string) error {
-	var ns []string
-	if namespace != "" {
-		ns = []string{"--namespace", namespace}
-	}
-	params := append(ns, "apply", "-f", "-")
+	params := append(k.ns(namespace), "apply", "-f", "-")
 	_, err := k.runCmd(params, []byte(content))
 	return err
+}
+
+func (k kubectl) ns(namespace string) []string {
+	if namespace != "" {
+		return []string{"--namespace", namespace}
+	} else {
+		return []string{}
+	}
 }
 
 func (k kubectl) runCmd(params []string, stdInData []byte)  (string, error) {
