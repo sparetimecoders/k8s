@@ -1,16 +1,11 @@
 variables:
-  PACKAGE_PATH: "/go/src/gitlab.com/sparetimecoders/k8s-go"
-  GO111MODULE: "on"
   GOCACHE: "${CI_PROJECT_DIR}/_go/cache"
 
-# A hack to make Golang-in-Gitlab happy
 before_script:
-  - mkdir -p $(dirname ${PACKAGE_PATH}) ${CI_PROJECT_DIR}/_go/{pkg,bin,cache}
+  - mkdir -p ${CI_PROJECT_DIR}/_go/{pkg,bin,cache}
   - rm -rf /go/pkg
-  - ln -s ${CI_PROJECT_DIR} ${PACKAGE_PATH}
   - ln -s ${CI_PROJECT_DIR}/_go/pkg /go/pkg
   - ln -s ${CI_PROJECT_DIR}/_go/bin /go/bin
-  - cd ${PACKAGE_PATH}
 
 cache:
   key: "$CI_COMMIT_REF_NAME"
