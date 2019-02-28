@@ -17,14 +17,22 @@ func New(context string) kubectl {
 	return kubectl{context:context}
 }
 
-func (k kubectl) GetPod(namespace string) string {
-	params := []string{"--namespace", namespace, "get", "pod"}
+func (k kubectl) GetPods(namespace string) string {
+	var ns []string
+	if namespace != "" {
+		ns = []string{"--namespace", namespace}
+	}
+	params := append(ns, "get", "pod")
 	res, _ := k.runCmd(params, nil)
 	return res
 }
 
 func (k kubectl) Apply(namespace string, content string) error {
-	params := []string{"--namespace", namespace, "apply", "-f", "-"}
+	var ns []string
+	if namespace != "" {
+		ns = []string{"--namespace", namespace}
+	}
+	params := append(ns, "apply", "-f", "-")
 	_, err := k.runCmd(params, []byte(content))
 	return err
 }
