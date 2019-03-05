@@ -1,13 +1,8 @@
 package ingress
 
 import (
-	"bufio"
-	"fmt"
 	"github.com/GeertJohan/go.rice"
-	"gopkg.in/yaml.v2"
 	"log"
-	"net/http"
-	"strings"
 )
 
 /**
@@ -33,14 +28,6 @@ ingress:create() {
 }
 */
 
-type basicYaml struct {
-	ApiVersion string `yaml:"apiVersion"`
-	Kind       string `yaml:"kind"`
-	Metadata   struct {
-		Name      string `yaml:"name"`
-		Namespace string `yaml:"namespace"`
-	} `yaml:"metadata"`
-}
 
 type Ingress struct {
 	AwsCertificate struct {
@@ -66,60 +53,3 @@ func readManifestFile() (string, error) {
 	return s, nil
 }
 
-func getParts(s string) []string {
-	scanner := bufio.NewScanner(strings.NewReader(s))
-	var yamls, current []string
-	for scanner.Scan() {
-		if line := scanner.Text(); line == "---" {
-			yamls = append(yamls, strings.Join(current, "\n"))
-			current = nil
-		} else {
-			current = append(current, line)
-		}
-	}
-	if len(current) > 0 {
-		yamls = append(yamls, strings.Join(current, "\n"))
-	}
-	return yamls
-}
-
-func buildUrl(yamlContent string) string {
-	host := "localhost"
-	port := 8080
-	urlString := "http://%s:%d%s"
-	yamlData := basicYaml{}
-
-	if err := yaml.UnmarshalStrict([]byte(yamlContent), &yamlData); err != nil {
-
-	}
-	var url, part string
-	if yamlData.Kind == "Namespace" {
-		part = "/api/v1/namespaces"
-	} else {
-		namespace := yamlData.Metadata.Namespace
-		if namespace == "" {
-			namespace = "default"
-		}
-		switch yamlData.ApiVersion {
-		case "v1":
-			// Core
-			part = fmt.Sprintf("/api/%s/namespaces/%s/%ss", yamlData.ApiVersion, namespace, strings.ToLower(yamlData.Kind))
-
-		default:
-			part = fmt.Sprintf("/apis/%s/namespaces/%s/%ss", yamlData.ApiVersion, namespace, strings.ToLower(yamlData.Kind))
-		}
-
-	}
-	url = fmt.Sprintf(urlString, host, port, part)
-	return url
-}
-
-// TODO Error and results
-func post(yamlContent string) {
-	url := buildUrl(yamlContent)
-	res, err := http.Post(url, "application/yaml", strings.NewReader(yamlContent))
-	if err != nil {
-		fmt.Print(err)
-	}
-	fmt.Print(res)
-}
