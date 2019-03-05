@@ -30,9 +30,14 @@ kind: Deployment
 metadata:
   name: nginx-ingress-controller
   namespace: ingress-nginx
-  labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
 `)
 	assert.Equal(t, "http://localhost:8080/apis/apps/v1/namespaces/ingress-nginx/deployments", deploymentUrl)
+
+	serviceUrl := buildUrl(`
+kind: Service
+apiVersion: v1
+metadata:
+  name: ingress-nginx
+`)
+	assert.Equal(t, "http://localhost:8080/api/v1/namespaces/default/services", serviceUrl)
 }

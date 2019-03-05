@@ -92,14 +92,22 @@ func buildUrl(yamlContent string) string {
 	if err := yaml.UnmarshalStrict([]byte(yamlContent), &yamlData); err != nil {
 
 	}
-	var url, part  string
-	namespace := yamlData.Metadata.Namespace
-	switch yamlData.Kind {
-	case "Namespace":
+	var url, part string
+	if yamlData.Kind == "Namespace" {
 		part = "/api/v1/namespaces"
+	} else {
+		namespace := yamlData.Metadata.Namespace
+		if namespace == "" {
+			namespace = "default"
+		}
+		switch yamlData.ApiVersion {
+		case "v1":
+			// Core
+			part = fmt.Sprintf("/api/%s/namespaces/%s/%ss", yamlData.ApiVersion, namespace, strings.ToLower(yamlData.Kind))
 
-	default:
-		part = fmt.Sprintf("/apis/%s/namespaces/%s/%ss", yamlData.ApiVersion, namespace, strings.ToLower(yamlData.Kind))
+		default:
+			part = fmt.Sprintf("/apis/%s/namespaces/%s/%ss", yamlData.ApiVersion, namespace, strings.ToLower(yamlData.Kind))
+		}
 
 	}
 	url = fmt.Sprintf(urlString, host, port, part)
@@ -107,7 +115,8 @@ func buildUrl(yamlContent string) string {
 }
 
 // TODO Error and results
-func post(url string, yamlContent string) {
+func post(yamlContent string) {
+	url := buildUrl(yamlContent)
 	res, err := http.Post(url, "application/yaml", strings.NewReader(yamlContent))
 	if err != nil {
 		fmt.Print(err)
