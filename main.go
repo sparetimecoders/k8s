@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"gitlab.com/sparetimecoders/k8s-go/aws"
 	"gitlab.com/sparetimecoders/k8s-go/config"
-	"gitlab.com/sparetimecoders/k8s-go/ingress"
+	"gitlab.com/sparetimecoders/k8s-go/creator"
 	"gitlab.com/sparetimecoders/k8s-go/kops"
 	"log"
 	"os"
@@ -35,8 +35,10 @@ func main() {
 	if c, err := loadConfig(args); err != nil {
 		log.Fatal(err)
 	} else {
-		//kops.GetCluster("peter.sparetimecoders.com", "s3://k8s.sparetimecoders.com-kops-storage").WaitForValidState(180)
+		//	kops.GetCluster("peter.sparetimecoders.com", "s3://k8s.sparetimecoders.com-kops-storage").WaitForValidState(180)
+		//addons(c)
 		//os.Exit(1)
+
 		stateStore := getStateStore(c)
 		awsSvc := aws.New(c.Region)
 
@@ -55,12 +57,30 @@ func main() {
 		// Wait for completion/valid cluster...
 		cluster.WaitForValidState(500)
 
-		// Add-ons
+	}
+}
 
-		if (c.Ingress != ingress.Ingress{}) {
-			fmt.Println("Ingress configured")
-			c.Ingress.Create()
+func addons(clusterConfig config.ClusterConfig) {
+	// Add-ons
+	// TODO Change...
+	creator, err := creator.ForContext("docker-desktop")
+	if err != nil {
+		log.Fatal(err)
+	}
+	addons := clusterConfig.Addons.List()
+	if len(addons) == 0 {
+		return
+	}
+	log.Printf("Creating %d addon(s)\n", len(addons))
+	for _, addon := range addons {
+		log.Printf("Creating %s\n", addon.Name())
+		s, err := addon.Content()
+		if err != nil {
+			log.Fatal(err)
 		}
+		creator.Create(s)
+
+		log.Printf("%s created\n", addon.Name())
 	}
 }
 

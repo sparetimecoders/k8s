@@ -6,6 +6,6 @@ import (
 )
 
 func TestIngress_readManifestFile(t *testing.T) {
-	s, _ := readManifestFile()
+	s, _ := Ingress{}.Content()
 	assert.Contains(t, s, "prometheus.io/port: \"10254\"")
 }

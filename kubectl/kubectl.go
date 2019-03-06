@@ -10,11 +10,11 @@ import (
 
 type kubectl struct {
 	context string
-	_ struct{}
+	_       struct{}
 }
 
 func New(context string) kubectl {
-	return kubectl{context:context}
+	return kubectl{context: context}
 }
 
 func (k kubectl) GetPods(namespace string) string {
@@ -37,7 +37,7 @@ func (k kubectl) ns(namespace string) []string {
 	}
 }
 
-func (k kubectl) runCmd(params []string, stdInData []byte)  (string, error) {
+func (k kubectl) runCmd(params []string, stdInData []byte) (string, error) {
 	ctx := []string{"--context", k.context}
 	cmd := exec.Command("kubectl", append(ctx, params...)...)
 	var outb, errb bytes.Buffer

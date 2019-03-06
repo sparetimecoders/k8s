@@ -2,7 +2,7 @@ package ingress
 
 import (
 	"github.com/GeertJohan/go.rice"
-	"log"
+	"strings"
 )
 
 /**
@@ -28,28 +28,31 @@ ingress:create() {
 }
 */
 
-
 type Ingress struct {
 	AwsCertificate struct {
 		AwsSecurityPolicy string `yaml:"awsSecurityPolicy" default:"ELBSecurityPolicy-TLS-1-2-2017-01"`
 		AwsCertificateARN string `yaml:"awsCertificateARN" default:""`
 	} `yaml:"awsCertificate"`
+	_ struct{}
 }
 
-// TODO Handle Azure and other cloud providers?
-func (ingress Ingress) Create() {
-	log.Println("Creating ingress from configuration")
-	b, _ := readManifestFile()
-
-	log.Println(b)
-}
-
-func readManifestFile() (string, error) {
+func (i Ingress) Content() (string, error) {
 	box := rice.MustFindBox("./manifests")
-	s, err := box.String("ingress.yaml")
+	var filesData []string
+	fileData, err := box.String("ingress.yaml")
 	if err != nil {
 		return "", err
 	}
-	return s, nil
+	filesData = append(filesData, fileData)
+
+	fileData, err = box.String("nginx-config.yaml")
+	if err != nil {
+		return "", err
+	}
+	filesData = append(filesData, fileData)
+	return strings.Join(filesData, "\n---\n"), nil
 }
 
+func (i Ingress) Name() string {
+	return "Ingress"
+}
