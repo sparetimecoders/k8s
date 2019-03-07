@@ -95,3 +95,20 @@ cloudLabels:
 	}, c)
 
 }
+
+func TestAddons(t *testing.T) {
+	c, err := ParseConfig([]byte(`
+name: es
+dnsZone: example.com
+cloudLabels:
+  environment: prod
+  organisation: dSPA
+addons:
+  ingress: {}
+  externalDns: {}
+`))
+	assert.Nil(t, err)
+
+	assert.Equal(t, 2, len(c.Addons.List()))
+
+}

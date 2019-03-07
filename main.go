@@ -35,6 +35,9 @@ func main() {
 	if clusterConfig, err := loadConfig(args); err != nil {
 		log.Fatal(err)
 	} else {
+
+		addons(clusterConfig)
+		os.Exit(1)
 		stateStore := getStateStore(clusterConfig)
 		awsSvc := aws.New()
 
@@ -57,18 +60,20 @@ func main() {
 }
 
 func addons(clusterConfig config.ClusterConfig) {
-	creator, err := creator.ForContext(clusterConfig.ClusterName())
-	if err != nil {
-		log.Fatal(err)
-	}
 	addons := clusterConfig.Addons.List()
 	if len(addons) == 0 {
 		return
 	}
+	creator, err := creator.ForContext(clusterConfig.ClusterName())
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	log.Printf("Creating %d addon(s)\n", len(addons))
+
 	for _, addon := range addons {
 		log.Printf("Creating %s\n", addon.Name())
-		s, err := addon.Content()
+		s, err := addon.Content(clusterConfig)
 		if err != nil {
 			log.Fatal(err)
 		}

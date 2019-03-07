@@ -6,7 +6,7 @@ import (
 )
 
 type awsService struct {
-	_      struct{}
+	_ struct{}
 }
 
 func New() awsService {

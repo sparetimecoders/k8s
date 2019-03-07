@@ -1,9 +1,4 @@
-package ingress
-
-import (
-	"github.com/GeertJohan/go.rice"
-	"strings"
-)
+package config
 
 /**
 ingress:create() {
@@ -33,24 +28,12 @@ type Ingress struct {
 		AwsSecurityPolicy string `yaml:"awsSecurityPolicy" default:"ELBSecurityPolicy-TLS-1-2-2017-01"`
 		AwsCertificateARN string `yaml:"awsCertificateARN" default:""`
 	} `yaml:"awsCertificate"`
+	ManifestLoader
 	_ struct{}
 }
 
-func (i Ingress) Content() (string, error) {
-	box := rice.MustFindBox("./manifests")
-	var filesData []string
-	fileData, err := box.String("ingress.yaml")
-	if err != nil {
-		return "", err
-	}
-	filesData = append(filesData, fileData)
-
-	fileData, err = box.String("nginx-config.yaml")
-	if err != nil {
-		return "", err
-	}
-	filesData = append(filesData, fileData)
-	return strings.Join(filesData, "\n---\n"), nil
+func (i Ingress) Content(clusterConfig ClusterConfig) (string, error) {
+	return i.Load("ingress", "ingress.yaml", "nginx-config.yaml")
 }
 
 func (i Ingress) Name() string {

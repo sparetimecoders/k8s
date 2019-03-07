@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"gitlab.com/sparetimecoders/k8s-go/addons"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
@@ -31,7 +30,33 @@ type ClusterConfig struct {
 	MasterInstanceType string            `yaml:"masterInstanceType" default:"t3.small"`
 	CloudLabels        map[string]string `yaml:"cloudLabels" default:""`
 	SshKeyPath         string            `yaml:"sshKeyPath" default:"~/.ssh/id_rsa.pub"`
-	Addons             *addons.Addons    `yaml:"addons" optional:"true"`
+	Addons             *Addons           `yaml:"addons" optional:"true"`
+}
+
+type Addons struct {
+	Ingress     *Ingress     `yaml:"ingress"`
+	ExternalDNS *ExternalDNS `yaml:"externalDns"`
+	_           struct{}
+}
+
+type Addon interface {
+	Content(config ClusterConfig) (string, error)
+	Name() string
+	//Validate(config config.ClusterConfig) bool
+}
+
+func (addons Addons) List() []Addon {
+	var result []Addon
+	a := reflect.TypeOf(addons)
+	value := reflect.ValueOf(&addons).Elem()
+	for i := 0; i < a.NumField(); i++ {
+		field := value.Field(i)
+		if field.Kind() != reflect.Struct && !field.IsNil() {
+			field.Interface()
+			result = append(result, field.Interface().(Addon))
+		}
+	}
+	return result
 }
 
 func (config ClusterConfig) ClusterName() string {
