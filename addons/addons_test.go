@@ -11,7 +11,6 @@ func TestAddons_List(t *testing.T) {
 	assert.Equal(t, 1, len(Addons{Ingress: &ingress.Ingress{}}.List()))
 	addons := Addons{Ingress: &ingress.Ingress{}}
 	for _, addon := range addons.List() {
-		res, _ := addon.Content()
-		assert.Equal(t, "PETER", res)
+		assert.Equal(t, "Ingress", addon.Name())
 	}
 }

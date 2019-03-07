@@ -69,7 +69,6 @@ dnsZone: example.com
 cloudLabels:
   environment: prod
   organisation: dSPA
-ingress: {}
   
 `))
 
@@ -95,5 +94,4 @@ ingress: {}
 		SshKeyPath: "~/.ssh/id_rsa.pub",
 	}, c)
 
-	fmt.Println(c.Ingress)
 }
