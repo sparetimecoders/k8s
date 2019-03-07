@@ -69,6 +69,7 @@ dnsZone: example.com
 cloudLabels:
   environment: prod
   organisation: dSPA
+  
 `))
 
 	assert.Nil(t, err)
@@ -92,4 +93,5 @@ cloudLabels:
 		},
 		SshKeyPath: "~/.ssh/id_rsa.pub",
 	}, c)
+
 }

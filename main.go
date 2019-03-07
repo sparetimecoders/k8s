@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"gitlab.com/sparetimecoders/k8s-go/aws"
 	"gitlab.com/sparetimecoders/k8s-go/config"
-	"gitlab.com/sparetimecoders/k8s-go/ingress"
+	"gitlab.com/sparetimecoders/k8s-go/creator"
 	"gitlab.com/sparetimecoders/k8s-go/kops"
 	"log"
 	"os"
@@ -32,40 +32,54 @@ func main() {
 		os.Exit(1)
 	}
 
-	if c, err := loadConfig(args); err != nil {
+	if clusterConfig, err := loadConfig(args); err != nil {
 		log.Fatal(err)
 	} else {
-		//kops.GetCluster("peter.sparetimecoders.com", "s3://k8s.sparetimecoders.com-kops-storage").WaitForValidState(180)
-		//os.Exit(1)
-		stateStore := getStateStore(c)
-		awsSvc := aws.New(c.Region)
+		stateStore := getStateStore(clusterConfig)
+		awsSvc := aws.New()
 
-		if awsSvc.ClusterExist(c) {
-			log.Fatalf("Cluster %v already exists", c.ClusterName())
+		if awsSvc.ClusterExist(clusterConfig) {
+			log.Fatalf("Cluster %v already exists", clusterConfig.ClusterName())
 		}
 		k := kops.New(stateStore)
-		cluster, err := k.CreateCluster(c)
+		cluster, err := k.CreateCluster(clusterConfig)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		setNodeInstanceGroupToSpotPricesAndSize(cluster, c)
-		setMasterInstanceGroupsToSpotPricesAndSize(cluster, c)
+		setNodeInstanceGroupToSpotPricesAndSize(cluster, clusterConfig)
+		setMasterInstanceGroupsToSpotPricesAndSize(cluster, clusterConfig)
 		cluster.CreateClusterResources()
 		// Wait for completion/valid cluster...
 		cluster.WaitForValidState(500)
+		addons(clusterConfig)
+	}
+}
 
-		// Add-ons
-
-		if (c.Ingress != ingress.Ingress{}) {
-			fmt.Println("Ingress configured")
-			c.Ingress.Create()
+func addons(clusterConfig config.ClusterConfig) {
+	creator, err := creator.ForContext(clusterConfig.ClusterName())
+	if err != nil {
+		log.Fatal(err)
+	}
+	addons := clusterConfig.Addons.List()
+	if len(addons) == 0 {
+		return
+	}
+	log.Printf("Creating %d addon(s)\n", len(addons))
+	for _, addon := range addons {
+		log.Printf("Creating %s\n", addon.Name())
+		s, err := addon.Content()
+		if err != nil {
+			log.Fatal(err)
 		}
+		creator.Create(s)
+
+		log.Printf("%s created\n", addon.Name())
 	}
 }
 
 func getStateStore(c config.ClusterConfig) string {
-	awsSvc := aws.New(c.Region)
+	awsSvc := aws.New()
 	bucketName := awsSvc.StateStoreBucketName(c.DnsZone)
 	if awsSvc.StateStoreBucketExist(c.DnsZone) {
 		fmt.Printf("Using existing statestore: %v \n", bucketName)
@@ -74,7 +88,7 @@ func getStateStore(c config.ClusterConfig) string {
 		fmt.Print("Continue and create statestore (y/N): ")
 		reader := bufio.NewReader(os.Stdin)
 		if r, _, _ := reader.ReadRune(); r == 'y' || r == 'Y' {
-			awsSvc.CreateStateStoreBucket(c.DnsZone)
+			awsSvc.CreateStateStoreBucket(c.DnsZone, c.Region)
 		} else {
 			log.Fatalln("Aborting...")
 		}
@@ -97,8 +111,8 @@ func setMasterInstanceGroupsToSpotPricesAndSize(cluster kops.Cluster, config con
 }
 
 func instancePrice(instanceType string, region string) float64 {
-	awsSvc := aws.New(region)
-	price, err := awsSvc.OnDemandPrice(instanceType)
+	awsSvc := aws.New()
+	price, err := awsSvc.OnDemandPrice(instanceType, region)
 	if err != nil {
 		log.Fatalf("Failed to get price for instancetype, %v, %v", instanceType, err)
 	}

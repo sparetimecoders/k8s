@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"gitlab.com/sparetimecoders/k8s-go/ingress"
+	"gitlab.com/sparetimecoders/k8s-go/addons"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
@@ -31,7 +31,7 @@ type ClusterConfig struct {
 	MasterInstanceType string            `yaml:"masterInstanceType" default:"t3.small"`
 	CloudLabels        map[string]string `yaml:"cloudLabels" default:""`
 	SshKeyPath         string            `yaml:"sshKeyPath" default:"~/.ssh/id_rsa.pub"`
-	Ingress            ingress.Ingress   `yaml:"ingress" optional:"true"`
+	Addons             *addons.Addons    `yaml:"addons" optional:"true"`
 }
 
 func (config ClusterConfig) ClusterName() string {

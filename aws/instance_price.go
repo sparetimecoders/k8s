@@ -6,18 +6,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/pricing"
+	"log"
 	"strconv"
 )
 
-func (awsSvc awsService) OnDemandPrice(instanceType string) (float64, error) {
+func (awsSvc awsService) OnDemandPrice(instanceType string, region string) (float64, error) {
 	sess := session.Must(session.NewSession(&aws.Config{
 		// API Endpoint for price must be eu-east-1
 		Region: aws.String("us-east-1"),
 	}))
 
 	pricingSvc := pricing.New(sess)
-
-	input := priceForInstanceRequest(instanceType, regionLocation(awsSvc.region))
+	location := regionLocation(region)
+	input := priceForInstanceRequest(instanceType, location)
+	if location == "" {
+		log.Fatalf("No region matching %s\n", region)
+	}
 	out, err := pricingSvc.GetProducts(input)
 	if err != nil {
 		return -1, err
@@ -27,13 +31,23 @@ func (awsSvc awsService) OnDemandPrice(instanceType string) (float64, error) {
 
 func regionLocation(region string) string {
 	var regions = map[string]string{
-		"eu-west-1": "EU (Ireland)",
+		"us-east-1":    "US East (N. Virginia)",
+		"us-east-2":    "US East (Ohio)",
+		"us-west-1":    "US West (N. California)",
+		"us-west-2":    "US West (Oregon)",
+		"ca-central-1": "Canada (Central)",
+		"eu-central-1": "EU (Frankfurt)",
+		"eu-west-1":    "EU (Ireland)",
+		"eu-west-2":    "EU (London)",
+		"eu-west-3":    "EU (Paris)",
+		"eu-north-1":   "EU (Stockholm)",
 	}
 
 	return regions[region]
 }
 
 func priceForInstanceRequest(instanceType string, region string) *pricing.GetProductsInput {
+
 	return &pricing.GetProductsInput{
 		Filters: []*pricing.Filter{
 			{
