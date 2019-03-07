@@ -23,6 +23,7 @@ type ClusterConfig struct {
 	Name               string            `yaml:"name"`
 	KubernetesVersion  string            `yaml:"kubernetesVersion" default:"1.11.7"`
 	DnsZone            string            `yaml:"dnsZone"`
+	Domain             string            `yaml:"domain"`
 	Region             string            `yaml:"region" default:"eu-west-1"`
 	MasterZones        []string          `yaml:"masterZones" default:"a"`
 	NetworkCIDR        string            `yaml:"networkCIDR" default:"172.21.0.0/22"`
