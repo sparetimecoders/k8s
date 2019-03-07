@@ -32,38 +32,32 @@ func main() {
 		os.Exit(1)
 	}
 
-	if c, err := loadConfig(args); err != nil {
+	if clusterConfig, err := loadConfig(args); err != nil {
 		log.Fatal(err)
 	} else {
-		//	kops.GetCluster("peter.sparetimecoders.com", "s3://k8s.sparetimecoders.com-kops-storage").WaitForValidState(180)
-		//addons(c)
-		//os.Exit(1)
+		stateStore := getStateStore(clusterConfig)
+		awsSvc := aws.New()
 
-		stateStore := getStateStore(c)
-		awsSvc := aws.New(c.Region)
-
-		if awsSvc.ClusterExist(c) {
-			log.Fatalf("Cluster %v already exists", c.ClusterName())
+		if awsSvc.ClusterExist(clusterConfig) {
+			log.Fatalf("Cluster %v already exists", clusterConfig.ClusterName())
 		}
 		k := kops.New(stateStore)
-		cluster, err := k.CreateCluster(c)
+		cluster, err := k.CreateCluster(clusterConfig)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		setNodeInstanceGroupToSpotPricesAndSize(cluster, c)
-		setMasterInstanceGroupsToSpotPricesAndSize(cluster, c)
+		setNodeInstanceGroupToSpotPricesAndSize(cluster, clusterConfig)
+		setMasterInstanceGroupsToSpotPricesAndSize(cluster, clusterConfig)
 		cluster.CreateClusterResources()
 		// Wait for completion/valid cluster...
 		cluster.WaitForValidState(500)
-
+		addons(clusterConfig)
 	}
 }
 
 func addons(clusterConfig config.ClusterConfig) {
-	// Add-ons
-	// TODO Change...
-	creator, err := creator.ForContext("docker-desktop")
+	creator, err := creator.ForContext(clusterConfig.ClusterName())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -85,7 +79,7 @@ func addons(clusterConfig config.ClusterConfig) {
 }
 
 func getStateStore(c config.ClusterConfig) string {
-	awsSvc := aws.New(c.Region)
+	awsSvc := aws.New()
 	bucketName := awsSvc.StateStoreBucketName(c.DnsZone)
 	if awsSvc.StateStoreBucketExist(c.DnsZone) {
 		fmt.Printf("Using existing statestore: %v \n", bucketName)
@@ -94,7 +88,7 @@ func getStateStore(c config.ClusterConfig) string {
 		fmt.Print("Continue and create statestore (y/N): ")
 		reader := bufio.NewReader(os.Stdin)
 		if r, _, _ := reader.ReadRune(); r == 'y' || r == 'Y' {
-			awsSvc.CreateStateStoreBucket(c.DnsZone)
+			awsSvc.CreateStateStoreBucket(c.DnsZone, c.Region)
 		} else {
 			log.Fatalln("Aborting...")
 		}
@@ -117,8 +111,8 @@ func setMasterInstanceGroupsToSpotPricesAndSize(cluster kops.Cluster, config con
 }
 
 func instancePrice(instanceType string, region string) float64 {
-	awsSvc := aws.New(region)
-	price, err := awsSvc.OnDemandPrice(instanceType)
+	awsSvc := aws.New()
+	price, err := awsSvc.OnDemandPrice(instanceType, region)
 	if err != nil {
 		log.Fatalf("Failed to get price for instancetype, %v, %v", instanceType, err)
 	}
