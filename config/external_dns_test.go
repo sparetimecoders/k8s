@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestLoader(t *testing.T) {
+func TestContent(t *testing.T) {
 	s, _ := ExternalDNS{}.Content(ClusterConfig{Domain: "replaced_domain", Name: "replaced_cluster_name", DnsZone: "dns"})
 	assert.Contains(t, s, "registry.opensource.zalan.do/teapot/external-dns:latest")
 	assert.Contains(t, s, "domain-filter=replaced_domain")

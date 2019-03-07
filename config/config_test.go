@@ -14,6 +14,7 @@ func TestValidConfig(t *testing.T) {
 	c, err := ParseConfig([]byte(`
 name: es
 dnsZone: example.com
+domain: example.com
 masterZones:
   - a
   - b
@@ -29,6 +30,7 @@ cloudLabels:
 		Name:              "es",
 		KubernetesVersion: "1.11.7",
 		DnsZone:           "example.com",
+		Domain:            "example.com",
 		Region:            "eu-west-1",
 		MasterZones:       []string{"a", "b", "c"},
 		NetworkCIDR:       "172.21.0.0/22",
@@ -55,7 +57,7 @@ func TestInvalidConfig(t *testing.T) {
 name: es
 `))
 
-	assert.Equal(t, "Missing required value for field(s): '[DnsZone CloudLabels]'\n", err.Error())
+	assert.Equal(t, "Missing required value for field(s): '[DnsZone Domain CloudLabels]'\n", err.Error())
 }
 
 func TestDefaultValuesConfig(t *testing.T) {
@@ -66,6 +68,7 @@ func TestDefaultValuesConfig(t *testing.T) {
 	c, err := ParseConfig([]byte(`
 name: es
 dnsZone: example.com
+domain: example.com
 cloudLabels:
   environment: prod
   organisation: dSPA
@@ -78,6 +81,7 @@ cloudLabels:
 		Name:              "es",
 		KubernetesVersion: "1.11.7",
 		DnsZone:           "example.com",
+		Domain:            "example.com",
 		Region:            "eu-west-1",
 		MasterZones:       []string{"a"},
 		NetworkCIDR:       "172.21.0.0/22",
@@ -100,6 +104,7 @@ func TestAddons(t *testing.T) {
 	c, err := ParseConfig([]byte(`
 name: es
 dnsZone: example.com
+domain: example.com
 cloudLabels:
   environment: prod
   organisation: dSPA

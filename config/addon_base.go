@@ -1,24 +1,13 @@
 package config
 
 import (
-	"fmt"
-	"github.com/GeertJohan/go.rice"
 	"strings"
 )
 
-type ManifestLoader struct {
-	_ struct{}
-}
-
-func (m ManifestLoader) Load(path string, files ...string) (string, error) {
-	box := rice.MustFindBox(fmt.Sprintf("manifests/%s", path))
-	var filesData []string
-	for _, f := range files {
-		fileData, err := box.String(f)
-		if err != nil {
-			return "", err
-		}
-		filesData = append(filesData, fileData)
+func replace(org string, a map[string]string) (string, error) {
+	copy := org
+	for k, v := range a {
+		copy = strings.ReplaceAll(copy, k, v)
 	}
-	return strings.Join(filesData, "\n---\n"), nil
+	return copy,nil
 }

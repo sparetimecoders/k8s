@@ -1,21 +1,18 @@
 package config
 
 import (
-	"strings"
+	"github.com/GeertJohan/go.rice"
 )
 
-type ExternalDNS struct {
-	ManifestLoader
-}
+type ExternalDNS struct{}
 
 func (e ExternalDNS) Name() string {
 	return "ExternalDNS"
 }
 
 func (e ExternalDNS) Content(config ClusterConfig) (string, error) {
-	s, err := e.Load("external_dns", "external_dns.yaml")
-	if err != nil {
-		return "", err
-	}
-	return strings.ReplaceAll(strings.ReplaceAll(s, "$domain", config.Domain), "$cluster_name", config.ClusterName()), nil
+	box := rice.MustFindBox("manifests/external_dns")
+	s := box.MustString("external_dns.yaml")
+
+	return replace(s, map[string]string{"$domain": config.Domain, "$cluster_name": config.ClusterName()})
 }
