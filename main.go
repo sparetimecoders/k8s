@@ -35,9 +35,6 @@ func main() {
 	if clusterConfig, err := loadConfig(args); err != nil {
 		log.Fatal(err)
 	} else {
-
-		addons(clusterConfig)
-		os.Exit(1)
 		stateStore := getStateStore(clusterConfig)
 		awsSvc := aws.New()
 
