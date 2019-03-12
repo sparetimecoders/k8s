@@ -22,7 +22,7 @@ deps:
   stage: deps
   image: golang:1.12
   script:
-    - go get
+    - go get -mod=readonly
 
 test:
   stage: test
@@ -32,7 +32,7 @@ test:
   script:
     - go fmt $(go list ./...)
     - go vet $(go list ./...)
-    - CGO_ENABLED=1 go test -race $(go list ./...) -coverprofile .testCoverage.txt
+    - CGO_ENABLED=1 go test -mod=readonly -race $(go list ./...) -coverprofile .testCoverage.txt
 
 build:
   stage: build
@@ -43,7 +43,7 @@ build:
     - go get github.com/GeertJohan/go.rice/rice
     - go get github.com/ahmetb/govvv
     - for p in $(go list ./...); do  rice embed-go -i $p; done
-    - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 govvv build -o release/k8s-go -ldflags '-w -s'
+    - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 govvv build -mod=readonly -o release/k8s-go -ldflags '-w -s'
   artifacts:
     paths:
       - release/
