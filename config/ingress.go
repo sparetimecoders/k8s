@@ -1,44 +1,40 @@
 package config
 
 import (
+	"fmt"
 	"github.com/GeertJohan/go.rice"
 	"strings"
 )
 
-/**
-ingress:create() {
-  local cert_arn="${1}"
-  printf "Creating ${BLUE}nginx-ingress-controller${NC}\n"
-  local ingress_service_name="ingress-nginx"
-  ${KUBECTL_CMD} apply -f "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/manifests/" &>/dev/null
-  until ${KUBECTL_CMD} get service ${ingress_service_name} --namespace ${ingress_service_name} &>/dev/null ; do date; sleep 1; echo ""; done
-
-  if [[ -n "${cert_arn}" ]]; then
-    ${KUBECTL_CMD} annotate service \
-        --overwrite \
-        --namespace ${ingress_service_name} \
-        ${ingress_service_name} \
-         "service.beta.kubernetes.io/aws-load-balancer-ssl-cert"="${cert_arn}" \
-         "service.beta.kubernetes.io/aws-load-balancer-backend-protocol"="http" \
-         "service.beta.kubernetes.io/aws-load-balancer-ssl-ports"="https" \
-         "service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy"="ELBSecurityPolicy-TLS-1-2-2017-01" &>/dev/null
-  fi
-  printf "Created ${BLUE}nginx-ingress-controller${NC}\n"
-
+type Aws struct {
+	SecurityPolicy string `yaml:"securityPolicy" default:"ELBSecurityPolicy-TLS-1-2-2017-01"`
+	CertificateARN string `yaml:"certificateARN"`
+	Protocol       string `yaml:"protocol" default:"http"`
+	Port           string `yaml:"ports" default:"http"`
+	Timeout        int    `yaml:"timeout" default:"60"`
 }
-*/
 
 type Ingress struct {
-	AwsCertificate struct {
-		AwsSecurityPolicy string `yaml:"awsSecurityPolicy" default:"ELBSecurityPolicy-TLS-1-2-2017-01"`
-		AwsCertificateARN string `yaml:"awsCertificateARN" default:""`
-	} `yaml:"awsCertificate"`
-	_ struct{}
+	Aws *Aws `yaml:"aws"`
+	_   struct{}
 }
 
 func (i Ingress) Manifests(clusterConfig ClusterConfig) (string, error) {
 	box := rice.MustFindBox("manifests/ingress")
-	return strings.Join([]string{box.MustString("ingress.yaml"), box.MustString("nginx-config.yaml")}, "\n---\n"), nil
+	manifest := box.MustString("ingress.yaml")
+
+	var replacementString []string
+	if i.Aws != nil {
+		if i.Aws.CertificateARN != "" {
+			replacementString = append(replacementString, fmt.Sprintf("    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: %v", i.Aws.CertificateARN))
+		}
+		replacementString = append(replacementString, fmt.Sprintf("    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: %d", i.Aws.Timeout))
+		replacementString = append(replacementString, fmt.Sprintf("    service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy: %v", i.Aws.SecurityPolicy))
+		replacementString = append(replacementString, fmt.Sprintf("    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: %v", i.Aws.Port))
+		replacementString = append(replacementString, fmt.Sprintf("    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: %v", i.Aws.Protocol))
+	}
+	manifest = strings.Replace(manifest, `    annotations_placeholder: ""`, strings.Join(replacementString, "\n"), 1)
+	return strings.Join([]string{manifest, box.MustString("nginx-config.yaml")}, "\n---\n"), nil
 }
 
 func (i Ingress) Name() string {
