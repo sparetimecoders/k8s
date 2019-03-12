@@ -90,15 +90,18 @@ func handleDefaultValues(t reflect.Value, missingFields *[]string, prefix string
 	for i := 0; i < refType.NumField(); i++ {
 		name := strings.TrimPrefix(fmt.Sprintf("%s.%s", prefix, refType.Field(i).Name), ".")
 		value := t.Field(i)
-		kind := value.Kind()
 		defaultValue := refType.Field(i).Tag.Get("default")
 		mandatory := refType.Field(i).Tag.Get("optional") != "true"
-		if (isZeroOfUnderlyingType(value) && mandatory) || kind == reflect.Struct || (kind == reflect.Ptr && !value.IsNil() && value.CanSet()) {
-			if kind == reflect.Struct || kind == reflect.Ptr {
-				if err := set(value, name, defaultValue, missingFields); err != nil {
-					return err
-				}
-			} else if defaultValue == "" {
+		if value.Kind() == reflect.Struct {
+			if err := handleDefaultValues(value, missingFields, name); err != nil {
+				return err
+			}
+		} else if value.Kind() == reflect.Ptr && !value.IsNil() {
+			if err := handleDefaultValues(value.Elem(), missingFields, name); err != nil {
+				return err
+			}
+		} else if isZeroOfUnderlyingType(value) && mandatory {
+			if defaultValue == "" {
 				*missingFields = append(*missingFields, name)
 			} else {
 				log.Printf("Setting default value for field '%s' = '%s'", name, defaultValue)
@@ -127,12 +130,6 @@ func set(field reflect.Value, name string, value string, missingFields *[]string
 			return err
 		}
 		field.Set(s.Elem())
-	case reflect.Ptr:
-		s := reflect.New(field.Type().Elem())
-		if err := handleDefaultValues(s.Elem(), missingFields, name); err != nil {
-			return err
-		}
-		field.Set(s)
 	case reflect.String:
 		field.SetString(value)
 	case reflect.Bool:

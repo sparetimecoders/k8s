@@ -108,6 +108,8 @@ domain: example.com
 cloudLabels:
   environment: prod
   organisation: dSPA
+nodes:
+  max: 10
 addons:
   ingress: 
     aws:
@@ -120,5 +122,7 @@ addons:
 	assert.Equal(t, 2, len(c.Addons.List()))
 	assert.Equal(t, 10, c.Addons.Ingress.Aws.Timeout)
 	assert.Equal(t, "https", c.Addons.Ingress.Aws.SSLPort)
+	assert.Equal(t, 10, c.Nodes.Max)
+	assert.Equal(t, 1, c.Nodes.Min)
 
 }
