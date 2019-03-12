@@ -10,7 +10,7 @@ type Aws struct {
 	SecurityPolicy string `yaml:"securityPolicy" default:"ELBSecurityPolicy-TLS-1-2-2017-01"`
 	CertificateARN string `yaml:"certificateARN"`
 	Protocol       string `yaml:"protocol" default:"http"`
-	Port           string `yaml:"ports" default:"http"`
+	SSLPort        string `yaml:"sslPort" default:"https"`
 	Timeout        int    `yaml:"timeout" default:"60"`
 }
 
@@ -28,9 +28,9 @@ func (i Ingress) Manifests(clusterConfig ClusterConfig) (string, error) {
 		if i.Aws.CertificateARN != "" {
 			replacementString = append(replacementString, fmt.Sprintf("    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: %v", i.Aws.CertificateARN))
 		}
-		replacementString = append(replacementString, fmt.Sprintf("    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: %d", i.Aws.Timeout))
+		replacementString = append(replacementString, fmt.Sprintf("    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: \"%d\"", i.Aws.Timeout))
 		replacementString = append(replacementString, fmt.Sprintf("    service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy: %v", i.Aws.SecurityPolicy))
-		replacementString = append(replacementString, fmt.Sprintf("    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: %v", i.Aws.Port))
+		replacementString = append(replacementString, fmt.Sprintf("    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: %v", i.Aws.SSLPort))
 		replacementString = append(replacementString, fmt.Sprintf("    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: %v", i.Aws.Protocol))
 	}
 	manifest = strings.Replace(manifest, `    annotations_placeholder: ""`, strings.Join(replacementString, "\n"), 1)

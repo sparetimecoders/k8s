@@ -13,11 +13,11 @@ func TestIngress_readManifestFile(t *testing.T) {
 }
 
 func TestIngress_readManifestFileWithAwsSettings(t *testing.T) {
-	s, _ := Ingress{Aws: &Aws{Protocol: "protocol", Port: "port", SecurityPolicy: "policy", CertificateARN: "ARN", Timeout: 10}}.Manifests(ClusterConfig{})
+	s, _ := Ingress{Aws: &Aws{Protocol: "protocol", SSLPort: "port", SecurityPolicy: "policy", CertificateARN: "ARN", Timeout: 10}}.Manifests(ClusterConfig{})
 	assert.NotContains(t, s, "annotations_placeholder")
 	assert.Contains(t, s, "    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: ARN")
 	assert.Contains(t, s, "    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: protocol")
 	assert.Contains(t, s, "    service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy: policy")
 	assert.Contains(t, s, "    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: port")
-	assert.Contains(t, s, "    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: 10")
+	assert.Contains(t, s, `   service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "10"`)
 }

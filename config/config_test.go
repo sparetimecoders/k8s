@@ -109,11 +109,15 @@ cloudLabels:
   environment: prod
   organisation: dSPA
 addons:
-  ingress: {}
+  ingress: 
+    aws:
+      timeout: 10
   externalDns: {}
 `))
 	assert.Nil(t, err)
 
 	assert.Equal(t, 2, len(c.Addons.List()))
+	assert.Equal(t, 10, c.Addons.Ingress.Aws.Timeout)
+	assert.Equal(t, "https", c.Addons.Ingress.Aws.SSLPort)
 
 }

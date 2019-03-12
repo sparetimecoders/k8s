@@ -8,7 +8,6 @@ import (
 type Addons struct {
 	Ingress     *Ingress     `yaml:"ingress"`
 	ExternalDNS *ExternalDNS `yaml:"externalDns"`
-	_           struct{}
 }
 
 func (addons Addons) List() []Addon {
