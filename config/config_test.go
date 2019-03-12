@@ -112,6 +112,7 @@ addons:
   ingress: 
     aws:
       timeout: 10
+      certificateARN: "arn:...."
   externalDns: {}
 `))
 	assert.Nil(t, err)
