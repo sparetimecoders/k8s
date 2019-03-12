@@ -47,6 +47,16 @@ func main() {
 			log.Fatal(err)
 		}
 
+		policies := config.Policies{Node: clusterConfig.Nodes.Policies}
+		for _, p := range clusterConfig.Addons.List() {
+			policies = config.Policies{Node: append(policies.Node, p.Policies().Node...), Master: append(policies.Master, p.Policies().Master...)}
+		}
+		// TODO Move code out of this main method...
+		if len(policies.Master) > 0 || len(policies.Node) > 0 {
+			if err := cluster.SetIamPolicies(policies); err != nil {
+				log.Fatal(err)
+			}
+		}
 		setNodeInstanceGroupToSpotPricesAndSize(cluster, clusterConfig)
 		setMasterInstanceGroupsToSpotPricesAndSize(cluster, clusterConfig)
 		cluster.CreateClusterResources()
@@ -57,18 +67,20 @@ func main() {
 }
 
 func addons(clusterConfig config.ClusterConfig) {
-	creator, err := creator.ForContext(clusterConfig.ClusterName())
-	if err != nil {
-		log.Fatal(err)
-	}
 	addons := clusterConfig.Addons.List()
 	if len(addons) == 0 {
 		return
 	}
+	creator, err := creator.ForContext(clusterConfig.ClusterName())
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	log.Printf("Creating %d addon(s)\n", len(addons))
+
 	for _, addon := range addons {
 		log.Printf("Creating %s\n", addon.Name())
-		s, err := addon.Content()
+		s, err := addon.Manifests(clusterConfig)
 		if err != nil {
 			log.Fatal(err)
 		}

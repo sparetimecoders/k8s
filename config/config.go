@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"gitlab.com/sparetimecoders/k8s-go/addons"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
@@ -14,16 +13,30 @@ import (
 	"strings"
 )
 
+type Policy struct {
+	Actions   []string `yaml:"actions" json:"Action"`
+	Effect    string   `yaml:"effect" json:"Effect"`
+	Resources []string `yaml:"resources" json:"Resource"`
+}
+
 type Nodes struct {
-	Min          int    `yaml:"min" default:"1"`
-	Max          int    `yaml:"max" default:"2"`
-	InstanceType string `yaml:"instanceType" default:"t3.medium"`
+	Min          int      `yaml:"min" default:"1"`
+	Max          int      `yaml:"max" default:"2"`
+	InstanceType string   `yaml:"instanceType" default:"t3.medium"`
+	Policies     []Policy `yaml:"policies" optional:"true"`
+}
+
+type Policies struct {
+	Node   []Policy `yaml:"node"`
+	Master []Policy `yaml:"master"`
+	_      struct{}
 }
 
 type ClusterConfig struct {
 	Name               string            `yaml:"name"`
 	KubernetesVersion  string            `yaml:"kubernetesVersion" default:"1.11.7"`
 	DnsZone            string            `yaml:"dnsZone"`
+	Domain             string            `yaml:"domain"`
 	Region             string            `yaml:"region" default:"eu-west-1"`
 	MasterZones        []string          `yaml:"masterZones" default:"a"`
 	NetworkCIDR        string            `yaml:"networkCIDR" default:"172.21.0.0/22"`
@@ -31,7 +44,7 @@ type ClusterConfig struct {
 	MasterInstanceType string            `yaml:"masterInstanceType" default:"t3.small"`
 	CloudLabels        map[string]string `yaml:"cloudLabels" default:""`
 	SshKeyPath         string            `yaml:"sshKeyPath" default:"~/.ssh/id_rsa.pub"`
-	Addons             *addons.Addons    `yaml:"addons" optional:"true"`
+	Addons             *Addons           `yaml:"addons" optional:"true"`
 }
 
 func (config ClusterConfig) ClusterName() string {

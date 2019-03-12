@@ -52,15 +52,3 @@ spec:
 	assert.Equal(t, "1.1000", parsed.MaxPrice(1.1).ig.Spec.MaxPrice)
 
 }
-
-/*
-func TestGetInstanceGroup(t *testing.T) {
-	kopsSvc := New("s3://k8s.sparetimecoders.com-kops-storage")
-	ig, err := kopsSvc.GetInstanceGroup("nodes", "peter.sparetimecoders.com")
-	if err != nil {
-		assert.Fail(t, "Failed to get ", err)
-	}
-	ig.Spec.MachineType = "t2.medium"
-	kopsSvc.UpdateInstanceGroup(ig)
-}
-*/

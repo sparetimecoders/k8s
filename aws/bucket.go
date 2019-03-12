@@ -41,9 +41,7 @@ func (awsSvc awsService) StateStoreBucketExist(dns string) bool {
 	s3Svc := s3.New(sess)
 	result, err := s3Svc.ListBuckets(&s3.ListBucketsInput{})
 	if err != nil {
-
 		log.Println(err)
-
 	}
 	bucketName := awsSvc.StateStoreBucketName(dns)
 	for _, b := range result.Buckets {
@@ -59,9 +57,9 @@ func (awsSvc awsService) ClusterExist(config config.ClusterConfig) bool {
 	sess := awsSvc.awsSession()
 
 	s3Svc := s3.New(sess)
-	buckets,_:=  s3Svc.ListBuckets(&s3.ListBucketsInput{})
+	buckets, _ := s3Svc.ListBuckets(&s3.ListBucketsInput{})
 
-	for _,b := range buckets.Buckets {
+	for _, b := range buckets.Buckets {
 		fmt.Println(b)
 	}
 	stateStoreBucketName := awsSvc.StateStoreBucketName(config.DnsZone)
@@ -77,4 +75,3 @@ func (awsSvc awsService) ClusterExist(config config.ClusterConfig) bool {
 	}
 	return false
 }
-

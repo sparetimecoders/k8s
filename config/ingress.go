@@ -1,4 +1,4 @@
-package ingress
+package config
 
 import (
 	"github.com/GeertJohan/go.rice"
@@ -36,23 +36,15 @@ type Ingress struct {
 	_ struct{}
 }
 
-func (i Ingress) Content() (string, error) {
-	box := rice.MustFindBox("./manifests")
-	var filesData []string
-	fileData, err := box.String("ingress.yaml")
-	if err != nil {
-		return "", err
-	}
-	filesData = append(filesData, fileData)
-
-	fileData, err = box.String("nginx-config.yaml")
-	if err != nil {
-		return "", err
-	}
-	filesData = append(filesData, fileData)
-	return strings.Join(filesData, "\n---\n"), nil
+func (i Ingress) Manifests(clusterConfig ClusterConfig) (string, error) {
+	box := rice.MustFindBox("manifests/ingress")
+	return strings.Join([]string{box.MustString("ingress.yaml"), box.MustString("nginx-config.yaml")}, "\n---\n"), nil
 }
 
 func (i Ingress) Name() string {
 	return "Ingress"
+}
+
+func (i Ingress) Policies() Policies {
+	return Policies{}
 }
