@@ -41,9 +41,7 @@ func (awsSvc awsService) StateStoreBucketExist(dns string) bool {
 	s3Svc := s3.New(sess)
 	result, err := s3Svc.ListBuckets(&s3.ListBucketsInput{})
 	if err != nil {
-
 		log.Println(err)
-
 	}
 	bucketName := awsSvc.StateStoreBucketName(dns)
 	for _, b := range result.Buckets {

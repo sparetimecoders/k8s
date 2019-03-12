@@ -13,10 +13,23 @@ import (
 	"strings"
 )
 
+type Policy struct {
+	Actions   []string `yaml:"actions" json:"Action"`
+	Effect    string   `yaml:"effect" json:"Effect"`
+	Resources []string `yaml:"resources" json:"Resource"`
+}
+
 type Nodes struct {
-	Min          int    `yaml:"min" default:"1"`
-	Max          int    `yaml:"max" default:"2"`
-	InstanceType string `yaml:"instanceType" default:"t3.medium"`
+	Min          int      `yaml:"min" default:"1"`
+	Max          int      `yaml:"max" default:"2"`
+	InstanceType string   `yaml:"instanceType" default:"t3.medium"`
+	Policies     []Policy `yaml:"policies" optional:"true"`
+}
+
+type Policies struct {
+	Node   []Policy `yaml:"node"`
+	Master []Policy `yaml:"master"`
+	_      struct{}
 }
 
 type ClusterConfig struct {
@@ -32,32 +45,6 @@ type ClusterConfig struct {
 	CloudLabels        map[string]string `yaml:"cloudLabels" default:""`
 	SshKeyPath         string            `yaml:"sshKeyPath" default:"~/.ssh/id_rsa.pub"`
 	Addons             *Addons           `yaml:"addons" optional:"true"`
-}
-
-type Addons struct {
-	Ingress     *Ingress     `yaml:"ingress"`
-	ExternalDNS *ExternalDNS `yaml:"externalDns"`
-	_           struct{}
-}
-
-type Addon interface {
-	Content(config ClusterConfig) (string, error)
-	Name() string
-	//Validate(config config.ClusterConfig) bool
-}
-
-func (addons Addons) List() []Addon {
-	var result []Addon
-	a := reflect.TypeOf(addons)
-	value := reflect.ValueOf(&addons).Elem()
-	for i := 0; i < a.NumField(); i++ {
-		field := value.Field(i)
-		if field.Kind() != reflect.Struct && !field.IsNil() {
-			field.Interface()
-			result = append(result, field.Interface().(Addon))
-		}
-	}
-	return result
 }
 
 func (config ClusterConfig) ClusterName() string {

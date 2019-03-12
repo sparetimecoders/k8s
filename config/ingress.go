@@ -36,11 +36,15 @@ type Ingress struct {
 	_ struct{}
 }
 
-func (i Ingress) Content(clusterConfig ClusterConfig) (string, error) {
+func (i Ingress) Manifests(clusterConfig ClusterConfig) (string, error) {
 	box := rice.MustFindBox("manifests/ingress")
 	return strings.Join([]string{box.MustString("ingress.yaml"), box.MustString("nginx-config.yaml")}, "\n---\n"), nil
 }
 
 func (i Ingress) Name() string {
 	return "Ingress"
+}
+
+func (i Ingress) Policies() Policies {
+	return Policies{}
 }

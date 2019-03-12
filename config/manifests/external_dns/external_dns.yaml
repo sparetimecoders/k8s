@@ -19,6 +19,7 @@ spec:
           image: registry.opensource.zalan.do/teapot/external-dns:latest
           args:
             - --source=ingress
+            - --source=service
             - --domain-filter=$domain
             - --provider=aws
             - --policy=sync
