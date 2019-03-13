@@ -34,7 +34,7 @@ test:
     - go fmt $(go list ./...)
     - go vet $(go list ./...)
     - CGO_ENABLED=1 go test -mod=readonly -race -coverprofile=.testCoverage.txt -covermode=atomic ./...
-    - go tool cover -html=coverage.txt -o coverage.html
+    - go tool cover -html=.testCoverage.txt -o coverage.html
     - go tool cover -func=.testCoverage.txt
   artifacts:
     paths:
