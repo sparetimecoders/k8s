@@ -138,7 +138,13 @@ func (c creator) buildUrl(yamlDescriptor string) (string, error) {
 		case "v1":
 			// Core
 			part = fmt.Sprintf("/api/%s/namespaces/%s/%ss", yamlData.ApiVersion, namespace, strings.ToLower(yamlData.Kind))
-
+		case "rbac.authorization.k8s.io/v1":
+			switch yamlData.Kind {
+			case "Role", "RoleBinding":
+				part = fmt.Sprintf("/apis/%s/namespaces/%s/%ss", yamlData.ApiVersion, namespace, strings.ToLower(yamlData.Kind))
+			default:
+				part = fmt.Sprintf("/apis/%s/%ss", yamlData.ApiVersion, strings.ToLower(yamlData.Kind))
+			}
 		default:
 			part = fmt.Sprintf("/apis/%s/namespaces/%s/%ss", yamlData.ApiVersion, namespace, strings.ToLower(yamlData.Kind))
 		}
