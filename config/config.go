@@ -92,12 +92,16 @@ func handleDefaultValues(t reflect.Value, missingFields *[]string, prefix string
 		value := t.Field(i)
 		defaultValue := refType.Field(i).Tag.Get("default")
 		mandatory := refType.Field(i).Tag.Get("optional") != "true"
-		if isZeroOfUnderlyingType(value) && mandatory {
-			if value.Kind() == reflect.Struct {
-				if err := set(value, name, defaultValue, missingFields); err != nil {
-					return err
-				}
-			} else if defaultValue == "" {
+		if value.Kind() == reflect.Struct {
+			if err := handleDefaultValues(value, missingFields, name); err != nil {
+				return err
+			}
+		} else if value.Kind() == reflect.Ptr && !value.IsNil() {
+			if err := handleDefaultValues(value.Elem(), missingFields, name); err != nil {
+				return err
+			}
+		} else if isZeroOfUnderlyingType(value) && mandatory {
+			if defaultValue == "" {
 				*missingFields = append(*missingFields, name)
 			} else {
 				log.Printf("Setting default value for field '%s' = '%s'", name, defaultValue)
