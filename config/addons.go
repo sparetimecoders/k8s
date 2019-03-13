@@ -6,11 +6,12 @@ import (
 )
 
 type Addons struct {
-	Ingress     *Ingress     `yaml:"ingress"`
-	ExternalDNS *ExternalDNS `yaml:"externalDns"`
+	Ingress           *Ingress           `yaml:"ingress" optional:"true"`
+	ExternalDNS       *ExternalDNS       `yaml:"externalDns" optional:"true"`
+	ClusterAutoscaler *ClusterAutoscaler `yaml:"clusterAutoscaler" optional:"true"`
 }
 
-func (addons Addons) List() []Addon {
+func (addons Addons) AllAddons() []Addon {
 	var result []Addon
 	a := reflect.TypeOf(addons)
 	value := reflect.ValueOf(&addons).Elem()
@@ -24,12 +25,22 @@ func (addons Addons) List() []Addon {
 	return result
 }
 
+func (addons Addons) GetAddon(t Addon) Addon {
+	for _, addon := range addons.AllAddons() {
+		x := t.Name()
+		y := addon.Name()
+		if x == y {
+			return addon
+		}
+	}
+	return nil
+}
+
 type Addon interface {
 	Manifests(config ClusterConfig) (string, error)
 	Name() string
 	Policies() Policies
 	//Validate(config config.ClusterConfig) bool
-
 }
 
 func replace(org string, a map[string]string) (string, error) {
