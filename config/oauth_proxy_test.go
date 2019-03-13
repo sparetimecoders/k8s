@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -18,7 +17,6 @@ func TestOauthProxy_Manifests_Azure(t *testing.T) {
               value: Cookie`)
 	assert.Contains(t, s, `- --provider=azure`)
 	assert.Contains(t, s, `- --azure-tenant=TenantId`)
-	fmt.Println(s)
 }
 
 func TestOauthProxy_Manifests(t *testing.T) {
