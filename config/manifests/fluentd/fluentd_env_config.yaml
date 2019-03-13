@@ -1,0 +1,9 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: fluentd-env-config
+  namespace: logging
+data:
+  FLUENT_UID: "0"
+  FLUENT_ELASTICSEARCH_SED_DISABLE: "true"
+  CLUSTER_NAME: "${cluster_name}"
