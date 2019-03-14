@@ -6,26 +6,29 @@ import (
 )
 
 type OauthProxy struct {
-	Provider string `yaml:"provider" default:"azure"`
+	Provider      string `yaml:"provider" default:"azure"`
 	AzureTenantId string `yaml:"azureTenantId" default:"common"`
-	ClientId string `yaml:"clientId"`
-	ClientSecret string `yaml:"clientSecret"`
-	CookieSecret string `yaml:"cookieSecret"`
+	ClientId      string `yaml:"clientId"`
+	ClientSecret  string `yaml:"clientSecret"`
+	CookieSecret  string `yaml:"cookieSecret"`
+	EmailDomain   string `yaml:"emailDomain" default:"*"`
 }
 
 func (o OauthProxy) Manifests(clusterConfig ClusterConfig) (string, error) {
 	box := rice.MustFindBox("manifests/oauth_proxy")
 	manifest := box.MustString("oauth_proxy.yaml")
-	additionalArgs:=""
+	additionalArgs := ""
 	if o.Provider == "azure" {
 		additionalArgs = fmt.Sprintf("- --azure-tenant=%v", o.AzureTenantId)
 	}
 
 	return replace(manifest, map[string]string{
-		"$additional_args": additionalArgs,
-		"$oauth2_proxy_client_id": o.ClientId,
+		"$additional_args":            additionalArgs,
+		"$email_domain":               o.EmailDomain,
+		"$provider":                   o.Provider,
+		"$oauth2_proxy_client_id":     o.ClientId,
 		"$oauth2_proxy_client_secret": o.ClientSecret,
-		"$oauth2_proxy_cookie_secret": o.CookieSecret,})
+		"$oauth2_proxy_cookie_secret": o.CookieSecret})
 }
 
 func (o OauthProxy) Name() string {
