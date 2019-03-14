@@ -6,4 +6,4 @@ metadata:
 data:
   FLUENT_UID: "0"
   FLUENT_ELASTICSEARCH_SED_DISABLE: "true"
-  CLUSTER_NAME: "${cluster_name}"
+  CLUSTER_NAME: "$cluster_name"

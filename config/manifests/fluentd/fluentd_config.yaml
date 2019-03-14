@@ -251,6 +251,9 @@ data:
       </record>
     </filter>
 
+    @include $output-output.conf
+
+  fluent-output.conf: |
     <match **>
       @type forward
       transport tls
@@ -260,8 +263,8 @@ data:
       expire_dns_cache 10s
 
       <server>
-        name fluentd-logging.aws-dspa.volvocars.biz
-        host fluentd-logging.aws-dspa.volvocars.biz
+        name $fluent_host
+        host $fluent_host
         username "#{ENV['FLUENT_USER']}"
         password "#{ENV['FLUENT_PASSWORD']}"
         port 24224
@@ -271,4 +274,12 @@ data:
          self_hostname "#{ENV['HOST_IP']}"
          shared_key "#{ENV['FLUENT_SHAREDKEY']}"
        </security>
+    </match>
+
+  es-output.conf: |
+    <match **>
+      @type elasticsearch_dynamic
+      logstash_format true
+      logstash_prefix ${record['kubernetes.cluster_name']}-${record['kubernetes']['namespace_name']}
+      hosts $es_host_and_port
     </match>
