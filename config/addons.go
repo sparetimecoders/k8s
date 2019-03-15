@@ -10,6 +10,7 @@ type Addons struct {
 	ExternalDNS       *ExternalDNS       `yaml:"externalDns" optional:"true"`
 	ClusterAutoscaler *ClusterAutoscaler `yaml:"clusterAutoscaler" optional:"true"`
 	OauthProxy        *OauthProxy        `yaml:"oauthProxy" optional:"true"`
+	Fluent            *Fluent            `yaml:"fluent" optional:"true"`
 }
 
 func (addons Addons) AllAddons() []Addon {
