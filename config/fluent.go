@@ -15,8 +15,10 @@ type RemoteFluent struct {
 }
 
 type RemoteEs struct {
-	Host string `yaml:"host"`
-	Port int    `yaml:"port" default:"9200"`
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port" default:"9200"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
 }
 
 type Fluent struct {
@@ -42,6 +44,8 @@ func (i Fluent) Manifests(clusterConfig ClusterConfig) (string, error) {
 	} else {
 		replacementStrings["$output"] = "es"
 		replacementStrings["$es_host_and_port"] = fmt.Sprintf("%s:%d", i.RemoteEs.Host, i.RemoteEs.Port)
+		replacementStrings["$es_user"] = fmt.Sprintf("user %s", i.RemoteEs.Username)
+		replacementStrings["$es_pass"] = fmt.Sprintf("password %s", i.RemoteEs.Password)
 	}
 	replacementStrings["$cluster_name"] = clusterConfig.Name
 

@@ -22,9 +22,22 @@ func TestFluent_readManifestFileWithRemoteFluentSettings(t *testing.T) {
 	assert.Contains(t, s, `FLUENT_SHAREDKEY: "key"`)
 }
 
-func TestFluent_readManifestFileWithRemoteEsSettings(t *testing.T) {
+func TestFluent_readManifestFileWithRemoteEsSettingsWithoutAuth(t *testing.T) {
 	s, _ := Fluent{RemoteEs: &RemoteEs{Host: "host", Port: 1234}}.Manifests(ClusterConfig{})
 	assert.NotContains(t, s, "@include $output-output.conf")
+	assert.NotContains(t, s, "$es_user")
+	assert.NotContains(t, s, "$es_pass")
 	assert.Contains(t, s, "@include es-output.conf")
 	assert.Contains(t, s, "hosts host:1234")
+}
+
+func TestFluent_readManifestFileWithRemoteEsSettingsAndAuth(t *testing.T) {
+	s, _ := Fluent{RemoteEs: &RemoteEs{Host: "host", Port: 1234, Username: "esuser", Password: "espass"}}.Manifests(ClusterConfig{})
+	assert.NotContains(t, s, "@include $output-output.conf")
+	assert.NotContains(t, s, "$es_user")
+	assert.NotContains(t, s, "$es_pass")
+	assert.Contains(t, s, "@include es-output.conf")
+	assert.Contains(t, s, "hosts host:1234")
+	assert.Contains(t, s, "user esuser")
+	assert.Contains(t, s, "password espass")
 }

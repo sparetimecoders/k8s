@@ -282,4 +282,6 @@ data:
       logstash_format true
       logstash_prefix ${record['kubernetes.cluster_name']}-${record['kubernetes']['namespace_name']}
       hosts $es_host_and_port
+      $es_user
+      $es_pass
     </match>
