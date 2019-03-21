@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: default-request-adder
+  name: default-request-adder
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: default-request-adder
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: default-request-adder
+    spec:
+      containers:
+        - name: default-request-adder
+          resources:
+            limits:
+              memory: "50Mi"
+            requests:
+              memory: "50Mi"
+          imagePullPolicy: Always
+          image: registry.gitlab.com/unboundsoftware/default-request-adder:1.0
+          args:
+            - /default-request-adder
+            - -excluded-ns=$excluded-ns
+            - -memory=$memory
+      restartPolicy: Always

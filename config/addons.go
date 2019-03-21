@@ -11,6 +11,7 @@ type Addons struct {
 	ClusterAutoscaler *ClusterAutoscaler `yaml:"clusterAutoscaler" optional:"true"`
 	OauthProxy        *OauthProxy        `yaml:"oauthProxy" optional:"true"`
 	Fluent            *Fluent            `yaml:"fluent" optional:"true"`
+	DefaultRequests   *DefaultRequests   `yaml:"defaultRequests" optional:"true"`
 }
 
 func (addons Addons) AllAddons() []Addon {
