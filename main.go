@@ -69,10 +69,10 @@ func main() {
 }
 
 func addons(clusterConfig config.ClusterConfig) {
-	addons := clusterConfig.Addons.AllAddons()
-	if len(addons) == 0 {
+	if clusterConfig.Addons == nil || len(clusterConfig.Addons.AllAddons()) == 0 {
 		return
 	}
+	addons := clusterConfig.Addons.AllAddons()
 	creator, err := creator.ForContext(clusterConfig.ClusterName())
 	if err != nil {
 		log.Fatal(err)
