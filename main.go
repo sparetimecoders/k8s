@@ -48,8 +48,10 @@ func main() {
 		}
 
 		policies := config.Policies{Node: clusterConfig.Nodes.Policies}
-		for _, p := range clusterConfig.Addons.AllAddons() {
-			policies = config.Policies{Node: append(policies.Node, p.Policies().Node...), Master: append(policies.Master, p.Policies().Master...)}
+		if clusterConfig.Addons != nil {
+			for _, p := range clusterConfig.Addons.AllAddons() {
+				policies = config.Policies{Node: append(policies.Node, p.Policies().Node...), Master: append(policies.Master, p.Policies().Master...)}
+			}
 		}
 		// TODO Move code out of this main method...
 		if len(policies.Master) > 0 || len(policies.Node) > 0 {
@@ -112,7 +114,7 @@ func getStateStore(c config.ClusterConfig) string {
 func setNodeInstanceGroupToSpotPricesAndSize(cluster kops.Cluster, clusterConfig config.ClusterConfig) {
 	price := instancePrice(clusterConfig.Nodes.InstanceType, clusterConfig.Region)
 	autoscaler := config.ClusterAutoscaler{}
-	autoscale := clusterConfig.Addons.GetAddon(autoscaler) != nil
+	autoscale := clusterConfig.Addons != nil && clusterConfig.Addons.GetAddon(autoscaler) != nil
 
 	setInstanceGroupToSpotPricesAndSize(cluster, "nodes", clusterConfig.Nodes.Min, clusterConfig.Nodes.Max, price, autoscale)
 }
