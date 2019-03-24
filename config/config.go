@@ -51,6 +51,14 @@ func (config ClusterConfig) ClusterName() string {
 	return fmt.Sprintf("%s.%s", config.Name, config.DnsZone)
 }
 
+func (config ClusterConfig) GetAddons() *Addons {
+	if config.Addons != nil {
+		return config.Addons
+	} else {
+		return &Addons{}
+	}
+}
+
 func ParseConfigFile(file string) (ClusterConfig, error) {
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
