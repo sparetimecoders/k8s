@@ -48,7 +48,7 @@ func main() {
 		}
 
 		policies := config.Policies{Node: clusterConfig.Nodes.Policies}
-		for _, p := range clusterConfig.GetAddons().AllAddons() {
+		for _, p := range clusterConfig.AllAddons() {
 			policies = config.Policies{Node: append(policies.Node, p.Policies().Node...), Master: append(policies.Master, p.Policies().Master...)}
 		}
 		// TODO Move code out of this main method...
@@ -59,7 +59,7 @@ func main() {
 		}
 		setNodeInstanceGroupToSpotPricesAndSize(cluster, clusterConfig)
 		setMasterInstanceGroupsToSpotPricesAndSize(cluster, clusterConfig)
-		cluster.CreateClusterResources()
+		_ = cluster.CreateClusterResources()
 		// Wait for completion/valid cluster...
 		cluster.WaitForValidState(500)
 		addons(clusterConfig)
@@ -67,7 +67,7 @@ func main() {
 }
 
 func addons(clusterConfig config.ClusterConfig) {
-	addons := clusterConfig.GetAddons().AllAddons()
+	addons := clusterConfig.AllAddons()
 	if len(addons) == 0 {
 		return
 	}
@@ -112,7 +112,7 @@ func getStateStore(c config.ClusterConfig) string {
 func setNodeInstanceGroupToSpotPricesAndSize(cluster kops.Cluster, clusterConfig config.ClusterConfig) {
 	price := instancePrice(clusterConfig.Nodes.InstanceType, clusterConfig.Region)
 	autoscaler := config.ClusterAutoscaler{}
-	autoscale := clusterConfig.GetAddons().GetAddon(autoscaler) != nil
+	autoscale := clusterConfig.GetAddon(autoscaler) != nil
 
 	setInstanceGroupToSpotPricesAndSize(cluster, "nodes", clusterConfig.Nodes.Min, clusterConfig.Nodes.Max, price, autoscale)
 }
