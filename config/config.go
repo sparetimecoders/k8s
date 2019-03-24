@@ -51,12 +51,31 @@ func (config ClusterConfig) ClusterName() string {
 	return fmt.Sprintf("%s.%s", config.Name, config.DnsZone)
 }
 
-func (config ClusterConfig) GetAddons() *Addons {
+func (config ClusterConfig) AllAddons() []Addon {
+	var result []Addon
 	if config.Addons != nil {
-		return config.Addons
-	} else {
-		return &Addons{}
+		a := reflect.TypeOf(*config.Addons)
+		value := reflect.ValueOf(config.Addons).Elem()
+		for i := 0; i < a.NumField(); i++ {
+			field := value.Field(i)
+			if field.Kind() != reflect.Struct && !field.IsNil() {
+				field.Interface()
+				result = append(result, field.Interface().(Addon))
+			}
+		}
 	}
+	return result
+}
+
+func (config ClusterConfig) GetAddon(t Addon) Addon {
+	for _, addon := range config.AllAddons() {
+		x := t.Name()
+		y := addon.Name()
+		if x == y {
+			return addon
+		}
+	}
+	return nil
 }
 
 func ParseConfigFile(file string) (ClusterConfig, error) {

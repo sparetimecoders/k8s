@@ -8,7 +8,7 @@ import (
 func TestAddons_List(t *testing.T) {
 	c := config(t)
 
-	assert.Equal(t, 2, len(c.Addons.AllAddons()))
+	assert.Equal(t, 2, len(c.AllAddons()))
 	assert.Equal(t, 10, c.Addons.Ingress.Aws.Timeout)
 	assert.Equal(t, "https", c.Addons.Ingress.Aws.SSLPort)
 }
@@ -16,14 +16,14 @@ func TestAddons_List(t *testing.T) {
 func TestAddons_GetConfiguredAddon(t *testing.T) {
 	c := config(t)
 
-	ingress := c.Addons.GetAddon(Ingress{}).(*Ingress)
+	ingress := c.GetAddon(Ingress{}).(*Ingress)
 	assert.Equal(t, 10, ingress.Aws.Timeout)
 }
 
 func TestAddons_GetNonConfiguredAddon(t *testing.T) {
 	c := config(t)
 
-	scaler := c.Addons.GetAddon(ClusterAutoscaler{})
+	scaler := c.GetAddon(ClusterAutoscaler{})
 	assert.Nil(t, scaler)
 }
 
