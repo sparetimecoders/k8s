@@ -78,6 +78,14 @@ func (config ClusterConfig) GetAddon(t Addon) Addon {
 	return nil
 }
 
+func Load(file string) (ClusterConfig, error) {
+	if file == "-" {
+		return ParseConfigStdin()
+	} else {
+		return ParseConfigFile(file)
+	}
+}
+
 func ParseConfigFile(file string) (ClusterConfig, error) {
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
