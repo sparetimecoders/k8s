@@ -12,11 +12,11 @@ import (
 	"os"
 )
 
-var file string
+var createFile string
 
 func init() {
 	rootCmd.AddCommand(createCmd)
-	createCmd.Flags().StringVarP(&file, "file", "f", "", "config-file, use - for stdin (required)")
+	createCmd.Flags().StringVarP(&createFile, "file", "f", "", "config-file, use - for stdin (required)")
 	_ = createCmd.MarkFlagRequired("file")
 }
 
@@ -25,7 +25,7 @@ var createCmd = &cobra.Command{
 	Short: "Create a K8S-cluster",
 	Long:  `Create a new K8S-cluster based on the provided config-file`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if clusterConfig, err := loadConfig(); err != nil {
+		if clusterConfig, err := config.Load(createFile); err != nil {
 			log.Fatal(err)
 		} else {
 			stateStore := getStateStore(clusterConfig)
@@ -143,13 +143,5 @@ func setInstanceGroupToSpotPricesAndSize(cluster kops.Cluster, igName string, mi
 	err = cluster.UpdateInstanceGroup(group)
 	if err != nil {
 		log.Fatalf("Failed to update instancegroup %v, %v", igName, err)
-	}
-}
-
-func loadConfig() (config.ClusterConfig, error) {
-	if file == "-" {
-		return config.ParseConfigStdin()
-	} else {
-		return config.ParseConfigFile(file)
 	}
 }

@@ -113,6 +113,20 @@ func (k kops) CreateCluster(config config.ClusterConfig) (Cluster, error) {
 	return Cluster{name: name, kops: k}, nil
 }
 
+func (k kops) DeleteCluster(config config.ClusterConfig) error {
+	name := config.ClusterName()
+
+	params := fmt.Sprintf(`delete cluster
+--name=%s
+--yes
+`,
+		name,
+	)
+
+	e := k.RunCmd(params, nil)
+	return e
+}
+
 func (k kops) buildParams(paramString string) []string {
 	stateStore := []string{"--state", k.stateStore}
 	return append(stateStore, strings.Split(strings.TrimSpace(
