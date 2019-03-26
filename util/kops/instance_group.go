@@ -67,7 +67,7 @@ func (c Cluster) UpdateInstanceGroup(group InstanceGroup) error {
 		return err
 	}
 
-	err = c.kops.RunCmd(params, data)
+	err = c.kops.Handler.RunCmd(params, data)
 
 	if err != nil {
 		log.Printf("Failed to update instancegroup %v\n", group.ig.Metadata.Name)
@@ -80,7 +80,7 @@ func (c Cluster) UpdateInstanceGroup(group InstanceGroup) error {
 func (c Cluster) GetInstanceGroup(name string) (InstanceGroup, error) {
 	params := fmt.Sprintf(`get ig %v --name %v -o yaml`, name, c.name)
 
-	out, err := c.kops.QueryCmd(params, nil)
+	out, err := c.kops.Handler.QueryCmd(params, nil)
 	if err != nil {
 		return InstanceGroup{}, err
 	}

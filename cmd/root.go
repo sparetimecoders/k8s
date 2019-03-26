@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"gitlab.com/sparetimecoders/k8s-go/util"
 	"gitlab.com/sparetimecoders/k8s-go/util/aws"
+	"gitlab.com/sparetimecoders/k8s-go/util/kops"
 	"io"
 	"os"
 )
@@ -52,4 +53,8 @@ func Execute() {
 
 func (c *RootCmd) Aws() aws.Service {
 	return c.factory.Aws()
+}
+
+func (c *RootCmd) Kops(stateStore string) kops.Kops {
+	return c.factory.Kops(stateStore)
 }

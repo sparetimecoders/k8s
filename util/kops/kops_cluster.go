@@ -10,7 +10,7 @@ import (
 
 func (c Cluster) kopsClusterConfig() string {
 	params := fmt.Sprintf(`get cluster %v -o yaml`, c.name)
-	out, err := c.kops.QueryCmd(params, nil)
+	out, err := c.kops.Handler.QueryCmd(params, nil)
 	if err != nil {
 		log.Panicf("Failed to get clusterconfig %v", err)
 		return ""
@@ -42,7 +42,7 @@ func (c Cluster) SetIamPolicies(policies config.Policies) error {
 
 	params := fmt.Sprintf(`replace cluster %v -f -`, c.name)
 
-	err := c.kops.RunCmd(params, []byte(kopsClusterConfig))
+	err := c.kops.Handler.RunCmd(params, []byte(kopsClusterConfig))
 
 	if err != nil {
 		log.Println("Failed to update cluster IAM policies")

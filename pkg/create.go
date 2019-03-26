@@ -21,7 +21,7 @@ func Create(file string, f util.Factory, out io.Writer) {
 		if awsSvc.ClusterExist(clusterConfig) {
 			log.Fatalf("Cluster %v already exists", clusterConfig.ClusterName())
 		}
-		k := kops.New(stateStore)
+		k := f.Kops(stateStore)
 		cluster, err := k.CreateCluster(clusterConfig)
 		if err != nil {
 			log.Fatal(err)

@@ -12,10 +12,28 @@ import (
 	"strings"
 )
 
+type CmdHandler interface {
+	QueryCmd(paramString string, stdInData []byte) ([]byte, error)
+	RunCmd(paramString string, stdInData []byte) error
+	MinimumKopsVersionInstalled(requiredKopsVersion string) bool
+}
+
+type osCmdHandler struct {
+	stateStore string
+	cmd        string
+	debug      bool
+}
+
+type Kops interface {
+	CreateCluster(config config.ClusterConfig) (Cluster, error)
+	DeleteCluster(config config.ClusterConfig) error
+}
+
 type kops struct {
 	stateStore string
 	cmd        string
 	debug      bool
+	Handler    CmdHandler
 	_          struct{}
 }
 
@@ -24,10 +42,11 @@ func New(stateStore string) kops {
 		stateStore = fmt.Sprintf("s3://%v", stateStore)
 	}
 	k := kops{stateStore: stateStore, cmd: "kops", debug: true}
+	k.Handler = osCmdHandler{stateStore, "kops", true}
 	return k
 }
 
-func (k kops) QueryCmd(paramString string, stdInData []byte) ([]byte, error) {
+func (k osCmdHandler) QueryCmd(paramString string, stdInData []byte) ([]byte, error) {
 	cmd := exec.Command(k.cmd, k.buildParams(paramString)...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -36,7 +55,7 @@ func (k kops) QueryCmd(paramString string, stdInData []byte) ([]byte, error) {
 	return out, nil
 }
 
-func (k kops) RunCmd(paramString string, stdInData []byte) error {
+func (k osCmdHandler) RunCmd(paramString string, stdInData []byte) error {
 	cmd := exec.Command(k.cmd, k.buildParams(paramString)...)
 
 	if stdInData != nil {
@@ -61,7 +80,7 @@ func (k kops) RunCmd(paramString string, stdInData []byte) error {
 }
 
 func (k kops) CreateCluster(config config.ClusterConfig) (Cluster, error) {
-	if ok := k.minimumKopsVersionInstalled(config.KubernetesVersion); ok == false {
+	if ok := k.Handler.MinimumKopsVersionInstalled(config.KubernetesVersion); ok == false {
 		log.Fatalf("Installed version of kops can't handle requested kubernetes version (%s)", config.KubernetesVersion)
 	}
 	name := config.ClusterName()
@@ -106,7 +125,7 @@ func (k kops) CreateCluster(config config.ClusterConfig) (Cluster, error) {
 		config.KubernetesVersion,
 	)
 
-	e := k.RunCmd(params, nil)
+	e := k.Handler.RunCmd(params, nil)
 	if e != nil {
 		return Cluster{}, e
 	}
@@ -123,17 +142,17 @@ func (k kops) DeleteCluster(config config.ClusterConfig) error {
 		name,
 	)
 
-	e := k.RunCmd(params, nil)
+	e := k.Handler.RunCmd(params, nil)
 	return e
 }
 
-func (k kops) buildParams(paramString string) []string {
+func (k osCmdHandler) buildParams(paramString string) []string {
 	stateStore := []string{"--state", k.stateStore}
 	return append(stateStore, strings.Split(strings.TrimSpace(
 		strings.Replace(paramString, "\n", " ", -1)), " ")...)
 }
 
-func (k kops) getKopsVersion() (string, error) {
+func (k osCmdHandler) getKopsVersion() (string, error) {
 	cmd := exec.Command(k.cmd, "version")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -146,7 +165,7 @@ func (k kops) getKopsVersion() (string, error) {
 	return version, nil
 }
 
-func (k kops) minimumKopsVersionInstalled(requiredKopsVersion string) bool {
+func (k osCmdHandler) MinimumKopsVersionInstalled(requiredKopsVersion string) bool {
 	version, err := k.getKopsVersion()
 	if err != nil {
 		log.Printf("Failed to get kops version %s", err)
@@ -159,7 +178,7 @@ func (k kops) minimumKopsVersionInstalled(requiredKopsVersion string) bool {
 	return v.Major() >= r.Major() && v.Minor() >= r.Minor()
 }
 
-func (k kops) printOut(out io.ReadCloser) {
+func (k osCmdHandler) printOut(out io.ReadCloser) {
 	scanner := bufio.NewScanner(out)
 	scanner.Split(bufio.ScanLines)
 

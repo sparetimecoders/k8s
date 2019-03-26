@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"gitlab.com/sparetimecoders/k8s-go/config"
 	"gitlab.com/sparetimecoders/k8s-go/util"
-	"gitlab.com/sparetimecoders/k8s-go/util/kops"
 )
 
 func Delete(file string, f util.Factory) error {
@@ -18,7 +17,7 @@ func Delete(file string, f util.Factory) error {
 			return errors.New(fmt.Sprintf("Cluster %v does not exist", clusterConfig.ClusterName()))
 		}
 		stateStore := awsSvc.GetStateStore(clusterConfig)
-		k := kops.New(stateStore)
+		k := f.Kops(stateStore)
 		return k.DeleteCluster(clusterConfig)
 	}
 }

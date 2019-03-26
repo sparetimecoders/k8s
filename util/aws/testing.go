@@ -7,11 +7,12 @@ import (
 )
 
 type MockService struct {
-	_ struct{}
+	ExistingCluster bool
+	_               struct{}
 }
 
 func (awsSvc MockService) ClusterExist(config config.ClusterConfig) bool {
-	return false
+	return awsSvc.ExistingCluster
 }
 
 func (awsSvc MockService) OnDemandPrice(instanceType string, region string) (float64, error) {
