@@ -3,18 +3,20 @@ package pkg
 import (
 	"fmt"
 	"gitlab.com/sparetimecoders/k8s-go/config"
+	"gitlab.com/sparetimecoders/k8s-go/util"
 	"gitlab.com/sparetimecoders/k8s-go/util/aws"
 	"gitlab.com/sparetimecoders/k8s-go/util/creator"
 	"gitlab.com/sparetimecoders/k8s-go/util/kops"
+	"io"
 	"log"
 )
 
-func Create(file string) {
+func Create(file string, f util.Factory, out io.Writer) {
 	if clusterConfig, err := config.Load(file); err != nil {
 		log.Fatal(err)
 	} else {
-		stateStore := aws.GetStateStore(clusterConfig)
-		awsSvc := aws.New()
+		awsSvc := f.Aws()
+		stateStore := awsSvc.GetStateStore(clusterConfig)
 
 		if awsSvc.ClusterExist(clusterConfig) {
 			log.Fatalf("Cluster %v already exists", clusterConfig.ClusterName())

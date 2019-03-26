@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-func (awsSvc awsService) OnDemandPrice(instanceType string, region string) (float64, error) {
+func (awsSvc defaultAwsService) OnDemandPrice(instanceType string, region string) (float64, error) {
 	sess := session.Must(session.NewSession(&aws.Config{
 		// API Endpoint for price must be eu-east-1
 		Region: aws.String("us-east-1"),

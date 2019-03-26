@@ -3,21 +3,24 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"gitlab.com/sparetimecoders/k8s-go/pkg"
+	"gitlab.com/sparetimecoders/k8s-go/util"
+	"io"
 )
 
-var createFile string
+func NewCmdCreate(f util.Factory, out io.Writer) *cobra.Command {
+	var file string
 
-func init() {
-	rootCmd.AddCommand(createCmd)
-	createCmd.Flags().StringVarP(&createFile, "file", "f", "", "config-file, use - for stdin (required)")
-	_ = createCmd.MarkFlagRequired("file")
-}
+	var cmd = &cobra.Command{
+		Use:   "create",
+		Short: "Create a K8S-cluster",
+		Long:  `Create a new K8S-cluster based on the provided config-file`,
+		Run: func(cmd *cobra.Command, args []string) {
+			pkg.Create(file, f, out)
+		},
+	}
 
-var createCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create a K8S-cluster",
-	Long:  `Create a new K8S-cluster based on the provided config-file`,
-	Run: func(cmd *cobra.Command, args []string) {
-		pkg.Create(createFile)
-	},
+	cmd.Flags().StringVarP(&file, "file", "f", "", "config-file, use - for stdin (required)")
+	_ = cmd.MarkFlagRequired("file")
+
+	return cmd
 }
