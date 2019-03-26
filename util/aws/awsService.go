@@ -9,7 +9,7 @@ import (
 type Service interface {
 	ClusterExist(config config.ClusterConfig) bool
 	GetStateStore(config config.ClusterConfig) string
-	OnDemandPrice(instanceType string, region string) (float64, error)
+	InstancePrice(instanceType string, region string) float64
 }
 
 type defaultAwsService struct {

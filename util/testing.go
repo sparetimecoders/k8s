@@ -9,7 +9,7 @@ import (
 
 type MockFactory struct {
 	ClusterExists bool
-	Handler       kops.CmdHandler
+	Handler       kops.MockHandler
 }
 
 func NewMockFactory() *MockFactory {

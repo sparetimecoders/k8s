@@ -15,8 +15,8 @@ func (awsSvc MockService) ClusterExist(config config.ClusterConfig) bool {
 	return awsSvc.ExistingCluster
 }
 
-func (awsSvc MockService) OnDemandPrice(instanceType string, region string) (float64, error) {
-	return 0.03, nil
+func (awsSvc MockService) InstancePrice(instanceType string, region string) float64 {
+	return 0.7
 }
 
 func (awsSvc MockService) GetStateStore(config config.ClusterConfig) string {

@@ -15,7 +15,9 @@ func NewCmdCreate(f util.Factory, out io.Writer) *cobra.Command {
 		Short: "Create a K8S-cluster",
 		Long:  `Create a new K8S-cluster based on the provided config-file`,
 		Run: func(cmd *cobra.Command, args []string) {
-			pkg.Create(file, f, out)
+			if err := pkg.Create(file, f, out); err != nil {
+				_, _ = out.Write([]byte(err.Error()))
+			}
 		},
 	}
 

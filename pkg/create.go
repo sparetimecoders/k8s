@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"errors"
 	"fmt"
 	"gitlab.com/sparetimecoders/k8s-go/config"
 	"gitlab.com/sparetimecoders/k8s-go/util"
@@ -11,20 +12,20 @@ import (
 	"log"
 )
 
-func Create(file string, f util.Factory, out io.Writer) {
+func Create(file string, f util.Factory, out io.Writer) error {
 	if clusterConfig, err := config.Load(file); err != nil {
-		log.Fatal(err)
+		return err
 	} else {
 		awsSvc := f.Aws()
 		stateStore := awsSvc.GetStateStore(clusterConfig)
 
 		if awsSvc.ClusterExist(clusterConfig) {
-			log.Fatalf("Cluster %v already exists", clusterConfig.ClusterName())
+			return errors.New(fmt.Sprintf("Cluster %v already exists", clusterConfig.ClusterName()))
 		}
 		k := f.Kops(stateStore)
 		cluster, err := k.CreateCluster(clusterConfig)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
 		policies := config.Policies{Node: clusterConfig.Nodes.Policies}
@@ -34,15 +35,16 @@ func Create(file string, f util.Factory, out io.Writer) {
 		// TODO Move code out of this main method...
 		if len(policies.Master) > 0 || len(policies.Node) > 0 {
 			if err := cluster.SetIamPolicies(policies); err != nil {
-				log.Fatal(err)
+				return err
 			}
 		}
-		setNodeInstanceGroupToSpotPricesAndSize(cluster, clusterConfig)
-		setMasterInstanceGroupsToSpotPricesAndSize(cluster, clusterConfig)
+		setNodeInstanceGroupToSpotPricesAndSize(awsSvc, cluster, clusterConfig)
+		setMasterInstanceGroupsToSpotPricesAndSize(awsSvc, cluster, clusterConfig)
 		_ = cluster.CreateClusterResources()
 		// Wait for completion/valid cluster...
 		cluster.WaitForValidState(500)
 		addons(clusterConfig)
+		return nil
 	}
 }
 
@@ -70,30 +72,20 @@ func addons(clusterConfig config.ClusterConfig) {
 	}
 }
 
-func setNodeInstanceGroupToSpotPricesAndSize(cluster kops.Cluster, clusterConfig config.ClusterConfig) {
-	price := instancePrice(clusterConfig.Nodes.InstanceType, clusterConfig.Region)
+func setNodeInstanceGroupToSpotPricesAndSize(awsSvc aws.Service, cluster kops.Cluster, clusterConfig config.ClusterConfig) {
+	price := awsSvc.InstancePrice(clusterConfig.Nodes.InstanceType, clusterConfig.Region)
 	autoscaler := config.ClusterAutoscaler{}
 	autoscale := clusterConfig.GetAddon(autoscaler) != nil
 
 	setInstanceGroupToSpotPricesAndSize(cluster, "nodes", clusterConfig.Nodes.Min, clusterConfig.Nodes.Max, price, autoscale)
 }
 
-func setMasterInstanceGroupsToSpotPricesAndSize(cluster kops.Cluster, config config.ClusterConfig) {
+func setMasterInstanceGroupsToSpotPricesAndSize(awsSvc aws.Service, cluster kops.Cluster, config config.ClusterConfig) {
 	for _, zone := range config.MasterZones {
 		igName := fmt.Sprintf("master-%v%v", config.Region, zone)
-		price := instancePrice(config.MasterInstanceType, config.Region)
+		price := awsSvc.InstancePrice(config.MasterInstanceType, config.Region)
 		setInstanceGroupToSpotPricesAndSize(cluster, igName, 1, 1, price, false)
 	}
-}
-
-func instancePrice(instanceType string, region string) float64 {
-	awsSvc := aws.New()
-	price, err := awsSvc.OnDemandPrice(instanceType, region)
-	if err != nil {
-		log.Fatalf("Failed to get price for instancetype, %v, %v", instanceType, err)
-	}
-	log.Printf("Got price %v for instancetype %v", price, instanceType)
-	return price
 }
 
 func setInstanceGroupToSpotPricesAndSize(cluster kops.Cluster, igName string, min int, max int, price float64, autoScale bool) {

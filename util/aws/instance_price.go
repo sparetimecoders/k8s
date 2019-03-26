@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-func (awsSvc defaultAwsService) OnDemandPrice(instanceType string, region string) (float64, error) {
+func onDemandPrice(instanceType string, region string) (float64, error) {
 	sess := session.Must(session.NewSession(&aws.Config{
 		// API Endpoint for price must be eu-east-1
 		Region: aws.String("us-east-1"),
@@ -27,6 +27,15 @@ func (awsSvc defaultAwsService) OnDemandPrice(instanceType string, region string
 		return -1, err
 	}
 	return findPriceInUSD(out.PriceList[0]["terms"].(map[string]interface{})["OnDemand"].(map[string]interface{}))
+}
+
+func (awsSvc defaultAwsService) InstancePrice(instanceType string, region string) float64 {
+	price, err := onDemandPrice(instanceType, region)
+	if err != nil {
+		log.Fatalf("Failed to get price for instancetype, %v, %v", instanceType, err)
+	}
+	log.Printf("Got price %v for instancetype %v", price, instanceType)
+	return price
 }
 
 func regionLocation(region string) string {

@@ -30,19 +30,15 @@ type Kops interface {
 }
 
 type kops struct {
-	stateStore string
-	cmd        string
-	debug      bool
-	Handler    CmdHandler
-	_          struct{}
+	Handler CmdHandler
+	_       struct{}
 }
 
 func New(stateStore string) kops {
 	if !strings.HasPrefix(stateStore, "s3://") {
 		stateStore = fmt.Sprintf("s3://%v", stateStore)
 	}
-	k := kops{stateStore: stateStore, cmd: "kops", debug: true}
-	k.Handler = osCmdHandler{stateStore, "kops", true}
+	k := kops{Handler: osCmdHandler{stateStore, "kops", true}}
 	return k
 }
 

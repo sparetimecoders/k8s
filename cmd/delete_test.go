@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/sparetimecoders/k8s-go/util"
-	"gitlab.com/sparetimecoders/k8s-go/util/kops"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -73,8 +72,8 @@ cloudLabels: {}
 
 		assert.Nil(t, err, "Error: %v", err)
 
-		close(factory.Handler.(kops.MockHandler).Cmds)
+		close(factory.Handler.Cmds)
 	}()
 
-	assert.Equal(t, "delete cluster\n--name=gotest.example.com\n--yes\n", <-factory.Handler.(kops.MockHandler).Cmds)
+	assert.Equal(t, "delete cluster\n--name=gotest.example.com\n--yes\n", <-factory.Handler.Cmds)
 }
