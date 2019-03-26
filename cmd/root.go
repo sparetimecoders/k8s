@@ -50,10 +50,6 @@ func Execute() {
 	}
 }
 
-func (c *RootCmd) AddCommand(cmd *cobra.Command) {
-	c.cobraCommand.AddCommand(cmd)
-}
-
 func (c *RootCmd) Aws() aws.Service {
 	return c.factory.Aws()
 }
