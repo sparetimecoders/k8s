@@ -8,17 +8,16 @@ import (
 	"os"
 )
 
-func GetStateStore(config config.ClusterConfig) string {
-	awsSvc := New()
-	bucketName := awsSvc.StateStoreBucketName(config.DnsZone)
-	if awsSvc.StateStoreBucketExist(config.DnsZone) {
+func (awsSvc defaultAwsService) GetStateStore(config config.ClusterConfig) string {
+	bucketName := awsSvc.stateStoreBucketName(config.DnsZone)
+	if awsSvc.stateStoreBucketExist(config.DnsZone) {
 		fmt.Printf("Using existing statestore: %v \n", bucketName)
 	} else {
 		fmt.Printf("No statestore S3 bucket found with name: %v \n", bucketName)
 		fmt.Print("Continue and create statestore (y/N): ")
 		reader := bufio.NewReader(os.Stdin)
 		if r, _, _ := reader.ReadRune(); r == 'y' || r == 'Y' {
-			awsSvc.CreateStateStoreBucket(config.DnsZone, config.Region)
+			awsSvc.createStateStoreBucket(config.DnsZone, config.Region)
 		} else {
 			log.Fatalln("Aborting...")
 		}

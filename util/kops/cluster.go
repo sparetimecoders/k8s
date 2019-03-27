@@ -18,7 +18,7 @@ func GetCluster(name string, stateStore string) Cluster {
 
 func (c Cluster) CreateClusterResources() error {
 	log.Printf("Creating cloud resources for %v", c.name)
-	return c.kops.RunCmd(fmt.Sprintf("update cluster %v --yes", c.name), nil)
+	return c.kops.Handler.RunCmd(fmt.Sprintf("update cluster %v --yes", c.name), nil)
 }
 
 func (c Cluster) WaitForValidState(maxWaitSeconds int) bool {
@@ -42,7 +42,7 @@ func (c Cluster) WaitForValidState(maxWaitSeconds int) bool {
 }
 
 func (c Cluster) checkValidState() (string, bool) {
-	out, err := c.kops.QueryCmd(fmt.Sprintf("validate cluster %v", c.name), nil)
+	out, err := c.kops.Handler.QueryCmd(fmt.Sprintf("validate cluster %v", c.name), nil)
 	if err == nil {
 		return "", true
 	}

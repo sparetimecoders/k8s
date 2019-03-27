@@ -3,19 +3,19 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"gitlab.com/sparetimecoders/k8s-go/util"
+	"io"
 )
 
-var GitCommit, GitBranch, BuildDate, Version string
+var GitCommit, GitBranch, BuildDate, Version string = "sha", "branch", "now", "version"
 
-func init() {
-	rootCmd.AddCommand(versionCmd)
-}
-
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Print the version number of k8s-go",
-	Long:  `All software has versions. This is k8s-go's'`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Version: %s, GitCommit: %s, GitBranch: %s, BuildDate: %s\n", Version, GitCommit, GitBranch, BuildDate)
-	},
+func NewCmdVersion(f util.Factory, out io.Writer) *cobra.Command {
+	return &cobra.Command{
+		Use:   "version",
+		Short: "Print the version number of k8s-go",
+		Long:  `All software has versions. This is k8s-go's'`,
+		Run: func(cmd *cobra.Command, args []string) {
+			_, _ = fmt.Fprintf(out, "Version: %s, GitCommit: %s, GitBranch: %s, BuildDate: %s\n", Version, GitCommit, GitBranch, BuildDate)
+		},
+	}
 }

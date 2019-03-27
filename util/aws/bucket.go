@@ -9,16 +9,16 @@ import (
 	"log"
 )
 
-func (awsSvc awsService) StateStoreBucketName(dns string) string {
+func (awsSvc defaultAwsService) stateStoreBucketName(dns string) string {
 	sess := awsSvc.awsSession()
 	identity, _ := sts.New(sess).GetCallerIdentity(&sts.GetCallerIdentityInput{})
 	return fmt.Sprintf("%v-%v-kops-storage", *identity.Account, dns)
 }
 
-func (awsSvc awsService) CreateStateStoreBucket(dns string, region string) {
+func (awsSvc defaultAwsService) createStateStoreBucket(dns string, region string) {
 	sess := awsSvc.awsSession()
 	s3Svc := s3.New(sess)
-	bucketName := awsSvc.StateStoreBucketName(dns)
+	bucketName := awsSvc.stateStoreBucketName(dns)
 	log.Printf("Creating statestore %v", bucketName)
 
 	if _, err := s3Svc.CreateBucket(&s3.CreateBucketInput{Bucket: &bucketName, CreateBucketConfiguration: &s3.CreateBucketConfiguration{LocationConstraint: &region}}); err == nil {
@@ -35,7 +35,7 @@ func (awsSvc awsService) CreateStateStoreBucket(dns string, region string) {
 	}
 }
 
-func (awsSvc awsService) StateStoreBucketExist(dns string) bool {
+func (awsSvc defaultAwsService) stateStoreBucketExist(dns string) bool {
 	sess := awsSvc.awsSession()
 
 	s3Svc := s3.New(sess)
@@ -43,7 +43,7 @@ func (awsSvc awsService) StateStoreBucketExist(dns string) bool {
 	if err != nil {
 		log.Println(err)
 	}
-	bucketName := awsSvc.StateStoreBucketName(dns)
+	bucketName := awsSvc.stateStoreBucketName(dns)
 	for _, b := range result.Buckets {
 		if *b.Name == bucketName {
 			return true
@@ -53,7 +53,7 @@ func (awsSvc awsService) StateStoreBucketExist(dns string) bool {
 	return false
 }
 
-func (awsSvc awsService) ClusterExist(config config.ClusterConfig) bool {
+func (awsSvc defaultAwsService) ClusterExist(config config.ClusterConfig) bool {
 	sess := awsSvc.awsSession()
 
 	s3Svc := s3.New(sess)
@@ -62,7 +62,7 @@ func (awsSvc awsService) ClusterExist(config config.ClusterConfig) bool {
 	for _, b := range buckets.Buckets {
 		fmt.Println(b)
 	}
-	stateStoreBucketName := awsSvc.StateStoreBucketName(config.DnsZone)
+	stateStoreBucketName := awsSvc.stateStoreBucketName(config.DnsZone)
 	if list, err := s3Svc.ListObjects(&s3.ListObjectsInput{
 		Bucket: aws.String(stateStoreBucketName),
 		Prefix: aws.String(config.ClusterName()),
