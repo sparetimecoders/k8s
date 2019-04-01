@@ -16,6 +16,7 @@ func NewMockFactory() *MockFactory {
 	factory := &MockFactory{}
 	factory.Handler = kops.MockHandler{
 		Cmds: make(chan string, 100),
+		Responses: make(chan string, 100),
 	}
 	return factory
 }
