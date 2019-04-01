@@ -156,7 +156,6 @@ func (k kops) Version() (string, error) {
 	}
 	s := strings.Split(string(out), " ")[1]
 	version := strings.TrimSpace(strings.TrimLeft(s, "Version: "))
-	semver.NewVersion(version)
 	return version, nil
 }
 
