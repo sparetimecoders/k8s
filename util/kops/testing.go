@@ -2,21 +2,19 @@
 
 package kops
 
+
 type MockHandler struct {
 	Cmds chan string
+	Responses chan string
 	_    struct{}
 }
 
 func (k MockHandler) QueryCmd(paramString string, stdInData []byte) ([]byte, error) {
 	k.Cmds <- paramString
-	return []byte{}, nil
+	return []byte(<- k.Responses), nil
 }
 
 func (k MockHandler) RunCmd(paramString string, stdInData []byte) error {
 	k.Cmds <- paramString
 	return nil
-}
-
-func (k MockHandler) MinimumKopsVersionInstalled(requiredKopsVersion string) bool {
-	return true
 }
