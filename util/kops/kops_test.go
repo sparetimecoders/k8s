@@ -17,7 +17,7 @@ var versions = []struct {
 func TestKopsVersionString(t *testing.T) {
 	r := make(chan string, 10)
 	handler := MockHandler{Cmds: make(chan string, 10), Responses: r}
-	k := MockKops{kops: kops{Handler: handler}}
+	k := kops{Handler: handler}
 
 	for _, tt := range versions {
 		r <- tt.input
@@ -40,7 +40,7 @@ var minVersions = []struct {
 func TestKopsMinimumKopsVersionInstalled(t *testing.T) {
 	r := make(chan string, 10)
 	handler := MockHandler{Cmds: make(chan string, 10), Responses: r}
-	k := MockKops{kops: kops{Handler: handler}}
+	k :=  kops{Handler: handler}
 
 	for _, tt := range minVersions {
 		r <- tt.actual

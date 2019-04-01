@@ -18,11 +18,3 @@ func (k MockHandler) RunCmd(paramString string, stdInData []byte) error {
 	k.Cmds <- paramString
 	return nil
 }
-
-
-type MockKops struct{
-	kops
-	_ struct{}
-}
-
-
