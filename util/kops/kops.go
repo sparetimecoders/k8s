@@ -15,7 +15,6 @@ import (
 type CmdHandler interface {
 	QueryCmd(paramString string, stdInData []byte) ([]byte, error)
 	RunCmd(paramString string, stdInData []byte) error
-	MinimumKopsVersionInstalled(requiredKopsVersion string) bool
 }
 
 type osCmdHandler struct {
@@ -27,6 +26,8 @@ type osCmdHandler struct {
 type Kops interface {
 	CreateCluster(config config.ClusterConfig) (Cluster, error)
 	DeleteCluster(config config.ClusterConfig) error
+	Version() (string, error)
+	MinimumKopsVersionInstalled(requiredKopsVersion string) bool
 }
 
 type kops struct {
@@ -76,7 +77,7 @@ func (k osCmdHandler) RunCmd(paramString string, stdInData []byte) error {
 }
 
 func (k kops) CreateCluster(config config.ClusterConfig) (Cluster, error) {
-	if ok := k.Handler.MinimumKopsVersionInstalled(config.KubernetesVersion); ok == false {
+	if ok := k.MinimumKopsVersionInstalled(config.KubernetesVersion); ok == false {
 		log.Fatalf("Installed version of kops can't handle requested kubernetes version (%s)", config.KubernetesVersion)
 	}
 	name := config.ClusterName()
@@ -148,23 +149,21 @@ func (k osCmdHandler) buildParams(paramString string) []string {
 		strings.Replace(paramString, "\n", " ", -1)), " ")...)
 }
 
-func (k osCmdHandler) getKopsVersion() (string, error) {
-	cmd := exec.Command(k.cmd, "version")
-	out, err := cmd.CombinedOutput()
+func (k kops) Version() (string, error) {
+	out, err := k.Handler.QueryCmd("version", nil)
 	if err != nil {
 		return "", err
 	}
-	_ = cmd.Start()
-	_ = cmd.Wait()
-
-	version := strings.TrimSpace(strings.TrimLeft(string(out), "Version: "))
+	s := strings.Split(string(out), " ")[1]
+	version := strings.TrimSpace(strings.TrimLeft(s, "Version: "))
+	semver.NewVersion(version)
 	return version, nil
 }
 
-func (k osCmdHandler) MinimumKopsVersionInstalled(requiredKopsVersion string) bool {
-	version, err := k.getKopsVersion()
+func (k kops) MinimumKopsVersionInstalled(requiredKopsVersion string) bool {
+	version, err := k.Version()
 	if err != nil {
-		log.Printf("Failed to get kops version %s", err)
+		log.Printf("Failed to get kops version %v", err)
 		return false
 	}
 
