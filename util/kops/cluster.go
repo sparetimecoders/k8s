@@ -21,7 +21,6 @@ func (c Cluster) CreateClusterResources() error {
 
 func (c Cluster) WaitForValidState(maxWaitSeconds int) bool {
 	log.Printf("Validating cluster, will wait max %v seconds\n", maxWaitSeconds)
-	fmt.Printf("Validating cluster, will wait max %v seconds\n", maxWaitSeconds)
 	endTime := time.Now().Add(time.Second * time.Duration(maxWaitSeconds))
 	done := false
 	out := ""

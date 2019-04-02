@@ -94,7 +94,6 @@ func (k kops) UpdateCluster() error {
 }
 
 func (k kops) ValidateCluster() (string, bool) {
-	log.Printf("Validating cluster %v", k.ClusterName)
 	out, err := k.Handler.QueryCmd(fmt.Sprintf("validate cluster %v", k.ClusterName), nil)
 	if err == nil {
 		return "", true

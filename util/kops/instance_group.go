@@ -77,6 +77,8 @@ func (c Cluster) UpdateInstanceGroup(group InstanceGroup) error {
 }
 
 func (c Cluster) GetInstanceGroup(name string) (InstanceGroup, error) {
+	log.Printf("Getting instance group %v\n", name)
+
 	out, err := c.kops.GetInstanceGroup(name)
 	if err != nil {
 		return InstanceGroup{}, err
