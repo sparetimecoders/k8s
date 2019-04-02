@@ -1,4 +1,4 @@
-package creator
+package kubectl
 
 import (
 	"bufio"
@@ -34,8 +34,10 @@ func (c kubectl) Apply(yamlContent string) error {
 	parts := getParts(yamlContent)
 	log.Printf("Found %d parts in yaml content", len(parts))
 	for _, part := range parts {
-		// TODO Handle errors
-		c.Handler.ApplyCmd([]byte(part))
+		if res, err := c.Handler.ApplyCmd([]byte(part)); err != nil {
+			log.Printf("Failed to apply content:\n %v\n\nReason: %v, %v\n", part, err, string(res))
+			return err
+		}
 	}
 	return nil
 }

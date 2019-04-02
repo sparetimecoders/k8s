@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"gitlab.com/sparetimecoders/k8s-go/config"
 	"gitlab.com/sparetimecoders/k8s-go/util"
-	"gitlab.com/sparetimecoders/k8s-go/util/creator"
+	"gitlab.com/sparetimecoders/k8s-go/util/kubectl"
 	"gitlab.com/sparetimecoders/k8s-go/util/kops"
 	"io"
 	"log"
@@ -40,7 +40,7 @@ func addons(clusterConfig config.ClusterConfig) {
 	if len(addons) == 0 {
 		return
 	}
-	creator:=creator.New(clusterConfig.ClusterName())
+	creator:= kubectl.New(clusterConfig.ClusterName())
 /*	creator, err := creator.ForContext(clusterConfig.ClusterName())
 	if err != nil {
 		log.Fatal(err)

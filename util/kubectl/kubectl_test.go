@@ -1,4 +1,4 @@
-package creator
+package kubectl
 
 import (
 	"github.com/stretchr/testify/assert"
