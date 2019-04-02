@@ -6,3 +6,4 @@ k8s-go
 _go
 rice-box.go
 .testCoverage.txt
+coverage.*

@@ -2,19 +2,22 @@
 
 package kops
 
-
 type MockHandler struct {
-	Cmds chan string
+	Cmds      chan string
 	Responses chan string
-	_    struct{}
+	_         struct{}
 }
 
 func (k MockHandler) QueryCmd(paramString string, stdInData []byte) ([]byte, error) {
 	k.Cmds <- paramString
-	return []byte(<- k.Responses), nil
+	return []byte(<-k.Responses), nil
 }
 
 func (k MockHandler) RunCmd(paramString string, stdInData []byte) error {
 	k.Cmds <- paramString
 	return nil
+}
+
+func NewMock(clusterName string, handler CmdHandler) Kops {
+	return kops{ClusterName: clusterName, Handler: handler}
 }

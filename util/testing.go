@@ -15,7 +15,7 @@ type MockFactory struct {
 func NewMockFactory() *MockFactory {
 	factory := &MockFactory{}
 	factory.Handler = kops.MockHandler{
-		Cmds: make(chan string, 100),
+		Cmds:      make(chan string, 100),
 		Responses: make(chan string, 100),
 	}
 	return factory
@@ -27,8 +27,6 @@ func (c *MockFactory) Aws() aws.Service {
 	}
 }
 
-func (c *MockFactory) Kops(stateStore string) kops.Kops {
-	k := kops.New(stateStore)
-	k.Handler = c.Handler
-	return k
+func (c *MockFactory) Kops(clusterName string, stateStore string) kops.Kops {
+	return kops.NewMock(clusterName, c.Handler)
 }

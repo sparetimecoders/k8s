@@ -59,7 +59,6 @@ func (ig InstanceGroup) AutoScale() InstanceGroup {
 
 func (c Cluster) UpdateInstanceGroup(group InstanceGroup) error {
 	log.Printf("Updating instance group %v\n", group.ig.Metadata.Name)
-	params := fmt.Sprintf(`replace ig %v --name %v -f -`, group.ig.Metadata.Name, c.name)
 
 	data, err := yaml.Marshal(group.ig)
 	if err != nil {
@@ -67,7 +66,7 @@ func (c Cluster) UpdateInstanceGroup(group InstanceGroup) error {
 		return err
 	}
 
-	err = c.kops.Handler.RunCmd(params, data)
+	err = c.kops.ReplaceInstanceGroup(group.ig.Metadata.Name, data)
 
 	if err != nil {
 		log.Printf("Failed to update instancegroup %v\n", group.ig.Metadata.Name)
@@ -78,9 +77,9 @@ func (c Cluster) UpdateInstanceGroup(group InstanceGroup) error {
 }
 
 func (c Cluster) GetInstanceGroup(name string) (InstanceGroup, error) {
-	params := fmt.Sprintf(`get ig %v --name %v -o yaml`, name, c.name)
+	log.Printf("Getting instance group %v\n", name)
 
-	out, err := c.kops.Handler.QueryCmd(params, nil)
+	out, err := c.kops.GetInstanceGroup(name)
 	if err != nil {
 		return InstanceGroup{}, err
 	}

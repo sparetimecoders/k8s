@@ -17,7 +17,7 @@ func Delete(file string, f util.Factory) error {
 			return errors.New(fmt.Sprintf("Cluster %v does not exist", clusterConfig.ClusterName()))
 		}
 		stateStore := awsSvc.GetStateStore(clusterConfig)
-		k := f.Kops(stateStore)
+		k := f.Kops(clusterConfig.ClusterName(), stateStore)
 		return k.DeleteCluster(clusterConfig)
 	}
 }

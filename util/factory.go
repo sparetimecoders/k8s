@@ -7,7 +7,7 @@ import (
 
 type Factory interface {
 	Aws() aws.Service
-	Kops(stateStore string) kops.Kops
+	Kops(clusterName string, stateStore string) kops.Kops
 }
 
 type DefaultFactory struct{}
@@ -20,6 +20,6 @@ func (c *DefaultFactory) Aws() aws.Service {
 	return aws.New()
 }
 
-func (c *DefaultFactory) Kops(stateStore string) kops.Kops {
-	return kops.New(stateStore)
+func (c *DefaultFactory) Kops(clusterName string, stateStore string) kops.Kops {
+	return kops.New(clusterName, stateStore)
 }

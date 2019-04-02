@@ -15,7 +15,7 @@ type Aws struct {
 }
 
 type Ingress struct {
-	Aws *Aws `yaml:"aws"`
+	Aws *Aws `yaml:"aws" optional:"true"`
 }
 
 func (i Ingress) Manifests(clusterConfig ClusterConfig) (string, error) {

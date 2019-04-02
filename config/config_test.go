@@ -1,17 +1,14 @@
 package config
 
 import (
-	"fmt"
+	"errors"
 	"github.com/stretchr/testify/assert"
+	"strings"
 	"testing"
 )
 
 func TestValidConfig(t *testing.T) {
-	if testing.Short() {
-		fmt.Println("Skipping test in short-mode")
-	}
-
-	c, err := ParseConfig([]byte(`
+	c, err := ParseConfigData([]byte(`
 name: es
 dnsZone: example.com
 domain: example.com
@@ -49,23 +46,16 @@ cloudLabels:
 }
 
 func TestInvalidConfig(t *testing.T) {
-	if testing.Short() {
-		fmt.Println("Skipping test in short-mode")
-	}
-
-	_, err := ParseConfig([]byte(`
+	_, err := ParseConfigData([]byte(`
 name: es
 `))
 
-	assert.Equal(t, "Missing required value for field(s): '[DnsZone Domain CloudLabels]'\n", err.Error())
+	assert.Equal(t, "Missing required value for field(s): '[CloudLabels]'\n", err.Error())
 }
 
 func TestDefaultValuesConfig(t *testing.T) {
-	if testing.Short() {
-		fmt.Println("Skipping test in short-mode")
-	}
 
-	c, err := ParseConfig([]byte(`
+	c, err := ParseConfigData([]byte(`
 name: es
 dnsZone: example.com
 domain: example.com
@@ -101,7 +91,7 @@ cloudLabels:
 }
 
 func TestDefaultValuesWithSomeGiven(t *testing.T) {
-	c, err := ParseConfig([]byte(`
+	c, err := ParseConfigData([]byte(`
 name: es
 dnsZone: example.com
 domain: example.com
@@ -114,4 +104,23 @@ nodes:
 	assert.Nil(t, err)
 	assert.Equal(t, 10, c.Nodes.Max)
 	assert.Equal(t, 1, c.Nodes.Min)
+}
+
+func TestIllegalYaml(t *testing.T) {
+	c, err := parseConfig(strings.NewReader(`as:a`))
+	assert.NotNil(t, c)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "yaml: unmarshal errors")
+}
+
+func TestReaderError(t *testing.T) {
+	_, err := parseConfig(MockReader{})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "expected failure")
+}
+
+type MockReader struct{}
+
+func (m MockReader) Read(p []byte) (n int, err error) {
+	return 0, errors.New("expected failure")
 }
