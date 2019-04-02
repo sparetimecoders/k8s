@@ -33,6 +33,8 @@ type Policies struct {
 	_      struct{}
 }
 
+const LocalCluster = "k8s.local"
+
 type ClusterConfig struct {
 	Name               string            `yaml:"name"`
 	KubernetesVersion  string            `yaml:"kubernetesVersion" default:"1.11.7"`

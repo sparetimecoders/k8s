@@ -116,18 +116,18 @@ func (k kops) GetConfig() (string, error) {
 	return string(out), err
 }
 
-func (k kops) CreateCluster(config config.ClusterConfig) (Cluster, error) {
-	if ok := k.MinimumKopsVersionInstalled(config.KubernetesVersion); ok == false {
-		log.Fatalf("Installed version of kops can't handle requested kubernetes version (%s)", config.KubernetesVersion)
+func (k kops) CreateCluster(clusterConfig config.ClusterConfig) (Cluster, error) {
+	if ok := k.MinimumKopsVersionInstalled(clusterConfig.KubernetesVersion); ok == false {
+		log.Fatalf("Installed version of kops can't handle requested kubernetes version (%s)", clusterConfig.KubernetesVersion)
 	}
-	name := config.ClusterName()
-	zones := fmt.Sprintf("%[1]sa,%[1]sb,%[1]sc", config.Region)
+	name := clusterConfig.ClusterName()
+	zones := fmt.Sprintf("%[1]sa,%[1]sb,%[1]sc", clusterConfig.Region)
 	var masterZones []string
-	for _, z := range config.MasterZones {
-		masterZones = append(masterZones, fmt.Sprintf("%s%s", config.Region, z))
+	for _, z := range clusterConfig.MasterZones {
+		masterZones = append(masterZones, fmt.Sprintf("%s%s", clusterConfig.Region, z))
 	}
 	var cloudLabels []string
-	for k, v := range config.CloudLabels {
+	for k, v := range clusterConfig.CloudLabels {
 		cloudLabels = append(cloudLabels, fmt.Sprintf("%s=%s", k, v))
 	}
 	params := fmt.Sprintf(`create cluster
@@ -135,7 +135,6 @@ func (k kops) CreateCluster(config config.ClusterConfig) (Cluster, error) {
 --node-count %d
 --zones %s
 --master-zones %s
---dns-zone %s
 --node-size %s
 --master-size %s
 --topology public
@@ -150,17 +149,20 @@ func (k kops) CreateCluster(config config.ClusterConfig) (Cluster, error) {
 --kubernetes-version=%s
 `,
 		name,
-		config.Nodes.Max,
+		clusterConfig.Nodes.Max,
 		zones,
 		strings.Join(masterZones, ","),
-		config.DnsZone,
-		config.Nodes.InstanceType,
-		config.MasterInstanceType,
-		config.SshKeyPath,
+		clusterConfig.Nodes.InstanceType,
+		clusterConfig.MasterInstanceType,
+		clusterConfig.SshKeyPath,
 		strings.Join(cloudLabels, ","),
-		config.NetworkCIDR,
-		config.KubernetesVersion,
+		clusterConfig.NetworkCIDR,
+		clusterConfig.KubernetesVersion,
 	)
+
+	if clusterConfig.DnsZone != config.LocalCluster {
+		params += fmt.Sprintf("--dns-zone %v", clusterConfig.DnsZone)
+	}
 
 	e := k.Handler.RunCmd(params, nil)
 	if e != nil {

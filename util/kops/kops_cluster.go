@@ -31,7 +31,7 @@ func policyString(instance string, policies []config.Policy) string {
 }
 
 func (c Cluster) SetIamPolicies(policies config.Policies) error {
-	if ! policies.Exists() {
+	if !policies.Exists() {
 		log.Println("No policies for cluster, skipping")
 		return nil
 	}

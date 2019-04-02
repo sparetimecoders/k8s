@@ -7,7 +7,7 @@ import (
 )
 
 var baseConfig = func() config.ClusterConfig {
-	c,_ := config.ParseConfigData([]byte(`
+	c, _ := config.ParseConfigData([]byte(`
 name: gotest
 dnsZone: example.com
 domain: example.com
@@ -16,7 +16,7 @@ masterZones:
   - a
 cloudLabels: {}
 `))
-return c
+	return c
 }
 
 var baseConfig2, _ = config.ParseConfigData([]byte(`
@@ -60,7 +60,7 @@ func TestPolicies3(t *testing.T) {
 func TestPolicies4(t *testing.T) {
 	policy := config.Policy{Actions: []string{"Action"}, Effect: "Allow", Resources: []string{"Resource1", "Resource2"}}
 	clusterConfig := baseConfig()
-	clusterConfig.Nodes.Policies  = []config.Policy{policy}
+	clusterConfig.Nodes.Policies = []config.Policy{policy}
 
 	clusterConfig.Addons = &config.Addons{
 		ClusterAutoscaler: &config.ClusterAutoscaler{},
@@ -72,4 +72,3 @@ func TestPolicies4(t *testing.T) {
 	assert.Equal(t, policy, p.Node[0])
 	assert.Equal(t, []config.Policy{}, p.Master)
 }
-
