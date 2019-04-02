@@ -9,8 +9,7 @@ import (
 )
 
 func (c Cluster) kopsClusterConfig() string {
-	params := fmt.Sprintf(`get cluster %v -o yaml`, c.name)
-	out, err := c.kops.Handler.QueryCmd(params, nil)
+	out, err := c.kops.GetConfig()
 	if err != nil {
 		log.Panicf("Failed to get clusterconfig %v", err)
 		return ""
@@ -30,7 +29,12 @@ func policyString(instance string, policies []config.Policy) string {
 		return ""
 	}
 }
+
 func (c Cluster) SetIamPolicies(policies config.Policies) error {
+	if ! policies.Exists() {
+		log.Println("No policies for cluster, skipping")
+		return nil
+	}
 	log.Println("Setting IAM policies for cluster")
 	log.Printf("Master policies: %d, Node policies: %d\n ", len(policies.Master), len(policies.Node))
 	kopsClusterConfig := c.kopsClusterConfig()
@@ -40,9 +44,7 @@ func (c Cluster) SetIamPolicies(policies config.Policies) error {
 	replacement := fmt.Sprintf("spec:\n  additionalPolicies: \n    %v\n    %v", node, master)
 	kopsClusterConfig = strings.Replace(kopsClusterConfig, "spec:", replacement, 1)
 
-	params := fmt.Sprintf(`replace cluster %v -f -`, c.name)
-
-	err := c.kops.Handler.RunCmd(params, []byte(kopsClusterConfig))
+	err := c.kops.ReplaceCluster(kopsClusterConfig)
 
 	if err != nil {
 		log.Println("Failed to update cluster IAM policies")

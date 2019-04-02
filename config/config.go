@@ -47,6 +47,10 @@ type ClusterConfig struct {
 	Addons             *Addons           `yaml:"addons" optional:"true"`
 }
 
+func (p Policies) Exists() bool {
+	return len(p.Master) > 0 || len(p.Node) > 0
+}
+
 func (config ClusterConfig) ClusterName() string {
 	return fmt.Sprintf("%s.%s", config.Name, config.DnsZone)
 }

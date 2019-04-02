@@ -6,7 +6,6 @@ import (
 	"gitlab.com/sparetimecoders/k8s-go/config"
 	"gitlab.com/sparetimecoders/k8s-go/util"
 	"gitlab.com/sparetimecoders/k8s-go/util/aws"
-	"gitlab.com/sparetimecoders/k8s-go/util/creator"
 	"gitlab.com/sparetimecoders/k8s-go/util/kops"
 	"io"
 	"log"
@@ -22,22 +21,18 @@ func Create(file string, f util.Factory, out io.Writer) error {
 		if awsSvc.ClusterExist(clusterConfig) {
 			return errors.New(fmt.Sprintf("Cluster %v already exists", clusterConfig.ClusterName()))
 		}
-		k := f.Kops(stateStore)
+		k := f.Kops(clusterConfig.ClusterName(), stateStore)
 		cluster, err := k.CreateCluster(clusterConfig)
 		if err != nil {
 			return err
 		}
 
-		policies := config.Policies{Node: clusterConfig.Nodes.Policies}
-		for _, p := range clusterConfig.AllAddons() {
-			policies = config.Policies{Node: append(policies.Node, p.Policies().Node...), Master: append(policies.Master, p.Policies().Master...)}
+		policies := policies(clusterConfig)
+
+		if err := cluster.SetIamPolicies(policies); err != nil {
+			return err
 		}
-		// TODO Move code out of this main method...
-		if len(policies.Master) > 0 || len(policies.Node) > 0 {
-			if err := cluster.SetIamPolicies(policies); err != nil {
-				return err
-			}
-		}
+
 		setNodeInstanceGroupToSpotPricesAndSize(awsSvc, cluster, clusterConfig)
 		setMasterInstanceGroupsToSpotPricesAndSize(awsSvc, cluster, clusterConfig)
 		_ = cluster.CreateClusterResources()
@@ -45,30 +40,6 @@ func Create(file string, f util.Factory, out io.Writer) error {
 		cluster.WaitForValidState(500)
 		addons(clusterConfig)
 		return nil
-	}
-}
-
-func addons(clusterConfig config.ClusterConfig) {
-	addons := clusterConfig.AllAddons()
-	if len(addons) == 0 {
-		return
-	}
-	creator, err := creator.ForContext(clusterConfig.ClusterName())
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("Creating %d addon(s)\n", len(addons))
-
-	for _, addon := range addons {
-		log.Printf("Creating %s\n", addon.Name())
-		s, err := addon.Manifests(clusterConfig)
-		if err != nil {
-			log.Fatal(err)
-		}
-		creator.Create(s)
-
-		log.Printf("%s created\n", addon.Name())
 	}
 }
 

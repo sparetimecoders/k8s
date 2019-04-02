@@ -7,18 +7,16 @@ import (
 )
 
 type Cluster struct {
-	name string
-	kops kops
+	kops Kops
 	_    struct{}
 }
 
 func GetCluster(name string, stateStore string) Cluster {
-	return Cluster{name: name, kops: New(stateStore)}
+	return Cluster{kops: New(name, stateStore)}
 }
 
 func (c Cluster) CreateClusterResources() error {
-	log.Printf("Creating cloud resources for %v", c.name)
-	return c.kops.Handler.RunCmd(fmt.Sprintf("update cluster %v --yes", c.name), nil)
+	return c.kops.UpdateCluster()
 }
 
 func (c Cluster) WaitForValidState(maxWaitSeconds int) bool {
@@ -42,9 +40,5 @@ func (c Cluster) WaitForValidState(maxWaitSeconds int) bool {
 }
 
 func (c Cluster) checkValidState() (string, bool) {
-	out, err := c.kops.Handler.QueryCmd(fmt.Sprintf("validate cluster %v", c.name), nil)
-	if err == nil {
-		return "", true
-	}
-	return string(out), false
+	return c.kops.ValidateCluster()
 }

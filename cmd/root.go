@@ -35,6 +35,7 @@ func NewCmdRoot(f util.Factory, out io.Writer) *cobra.Command {
 	cmd.AddCommand(NewCmdVersion(f, out))
 	cmd.AddCommand(NewCmdCreate(f, out))
 	cmd.AddCommand(NewCmdDelete(f, out))
+	cmd.AddCommand(NewCmdAddons(f, out))
 
 	return cmd
 }
@@ -55,6 +56,6 @@ func (c *RootCmd) Aws() aws.Service {
 	return c.factory.Aws()
 }
 
-func (c *RootCmd) Kops(stateStore string) kops.Kops {
-	return c.factory.Kops(stateStore)
+func (c *RootCmd) Kops(clusterName string, stateStore string) kops.Kops {
+	return c.factory.Kops(clusterName, stateStore)
 }

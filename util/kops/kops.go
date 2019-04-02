@@ -26,20 +26,27 @@ type osCmdHandler struct {
 type Kops interface {
 	CreateCluster(config config.ClusterConfig) (Cluster, error)
 	DeleteCluster(config config.ClusterConfig) error
+	UpdateCluster() error
+	ReplaceCluster(config string) error
+	ValidateCluster() (string, bool)
+	GetConfig() (string, error)
+	ReplaceInstanceGroup(name string, data []byte) error
+	GetInstanceGroup(name string) ([]byte, error)
 	Version() (string, error)
 	MinimumKopsVersionInstalled(requiredKopsVersion string) bool
 }
 
 type kops struct {
-	Handler CmdHandler
-	_       struct{}
+	Handler     CmdHandler
+	ClusterName string
+	_           struct{}
 }
 
-func New(stateStore string) kops {
+func New(name string, stateStore string) Kops {
 	if !strings.HasPrefix(stateStore, "s3://") {
 		stateStore = fmt.Sprintf("s3://%v", stateStore)
 	}
-	k := kops{Handler: osCmdHandler{stateStore, "kops", true}}
+	k := kops{ClusterName: name, Handler: osCmdHandler{stateStore, "kops", true}}
 	return k
 }
 
@@ -74,6 +81,39 @@ func (k osCmdHandler) RunCmd(paramString string, stdInData []byte) error {
 	}()
 
 	return cmd.Wait()
+}
+
+func (k kops) ReplaceCluster(config string) error {
+	log.Printf("Replacing cluster %v", k.ClusterName)
+	return k.Handler.RunCmd(fmt.Sprintf("replace cluster %v -f -", k.ClusterName), []byte(config))
+}
+
+func (k kops) UpdateCluster() error {
+	log.Printf("Updating cluster %v", k.ClusterName)
+	return k.Handler.RunCmd(fmt.Sprintf("update cluster %v --yes", k.ClusterName), nil)
+}
+
+func (k kops) ValidateCluster() (string, bool) {
+	log.Printf("Validating cluster %v", k.ClusterName)
+	out, err := k.Handler.QueryCmd(fmt.Sprintf("validate cluster %v", k.ClusterName), nil)
+	if err == nil {
+		return "", true
+	}
+	return string(out), false
+}
+
+func (k kops) GetInstanceGroup(name string) ([]byte, error) {
+	return k.Handler.QueryCmd(fmt.Sprintf("get ig %v --name %v -o yaml", name, k.ClusterName), nil)
+}
+
+func (k kops) ReplaceInstanceGroup(name string, data []byte) error {
+	return k.Handler.RunCmd(fmt.Sprintf("replace ig %v --name %v -f -", name, k.ClusterName), data)
+}
+
+func (k kops) GetConfig() (string, error) {
+	params := fmt.Sprintf("get cluster %v -o yaml", k.ClusterName)
+	out, err := k.Handler.QueryCmd(params, nil)
+	return string(out), err
 }
 
 func (k kops) CreateCluster(config config.ClusterConfig) (Cluster, error) {
@@ -126,7 +166,7 @@ func (k kops) CreateCluster(config config.ClusterConfig) (Cluster, error) {
 	if e != nil {
 		return Cluster{}, e
 	}
-	return Cluster{name: name, kops: k}, nil
+	return Cluster{kops: k}, nil
 }
 
 func (k kops) DeleteCluster(config config.ClusterConfig) error {
