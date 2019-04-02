@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gopkg.in/yaml.v2"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -35,8 +36,8 @@ type Policies struct {
 type ClusterConfig struct {
 	Name               string            `yaml:"name"`
 	KubernetesVersion  string            `yaml:"kubernetesVersion" default:"1.11.7"`
-	DnsZone            string            `yaml:"dnsZone"`
-	Domain             string            `yaml:"domain"`
+	DnsZone            string            `yaml:"dnsZone" default:"k8s.local"`
+	Domain             string            `yaml:"domain" optional:"true"`
 	Region             string            `yaml:"region" default:"eu-west-1"`
 	MasterZones        []string          `yaml:"masterZones" default:"a"`
 	NetworkCIDR        string            `yaml:"networkCIDR" default:"172.21.0.0/22"`
@@ -91,22 +92,27 @@ func Load(file string) (ClusterConfig, error) {
 }
 
 func ParseConfigFile(file string) (ClusterConfig, error) {
-	data, err := ioutil.ReadFile(file)
-	if err != nil {
+	if r, err := os.Open(file); err != nil {
 		return ClusterConfig{}, err
+	} else {
+		return parseConfig(r)
 	}
-	return ParseConfig(data)
 }
 
 func ParseConfigStdin() (ClusterConfig, error) {
-	data, err := ioutil.ReadAll(bufio.NewReader(os.Stdin))
+	return parseConfig(bufio.NewReader(os.Stdin))
+}
+
+func parseConfig(r io.Reader) (ClusterConfig, error) {
+	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return ClusterConfig{}, err
 	}
-	return ParseConfig(data)
+	return parseConfigData(data)
+
 }
 
-func ParseConfig(content []byte) (ClusterConfig, error) {
+func parseConfigData(content []byte) (ClusterConfig, error) {
 	config := ClusterConfig{}
 	if err := yaml.UnmarshalStrict(content, &config); err != nil {
 		return config, err

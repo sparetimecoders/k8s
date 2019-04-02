@@ -28,7 +28,7 @@ func TestAddons_GetNonConfiguredAddon(t *testing.T) {
 }
 
 func config(t *testing.T) ClusterConfig {
-	c, err := ParseConfig([]byte(`
+	c, err := ParseConfigData([]byte(`
 name: es
 dnsZone: example.com
 domain: example.com

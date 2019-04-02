@@ -7,7 +7,7 @@ import (
 )
 
 var baseConfig = func() config.ClusterConfig {
-	c,_ := config.ParseConfig([]byte(`
+	c,_ := config.ParseConfigData([]byte(`
 name: gotest
 dnsZone: example.com
 domain: example.com
@@ -19,7 +19,7 @@ cloudLabels: {}
 return c
 }
 
-var baseConfig2, _ = config.ParseConfig([]byte(`
+var baseConfig2, _ = config.ParseConfigData([]byte(`
 name: gotest
 dnsZone: example.com
 domain: example.com
