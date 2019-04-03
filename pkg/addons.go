@@ -27,6 +27,10 @@ func Addons(file string, f util.Factory, out io.Writer) error {
 		if err := cluster.SetIamPolicies(policies(clusterConfig)); err != nil {
 			return err
 		}
+		
+		if err := cluster.CreateClusterResources(); err != nil {
+			return err
+		}
 
 		addons(clusterConfig)
 	}
