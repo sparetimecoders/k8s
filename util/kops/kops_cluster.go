@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gitlab.com/sparetimecoders/k8s-go/config"
 	"log"
+	"regexp"
 	"strings"
 )
 
@@ -38,11 +39,8 @@ func (c Cluster) SetIamPolicies(policies config.Policies) error {
 	log.Println("Setting IAM policies for cluster")
 	log.Printf("Master policies: %d, Node policies: %d\n ", len(policies.Master), len(policies.Node))
 	kopsClusterConfig := c.kopsClusterConfig()
-	node := policyString("node", policies.Node)
-	master := policyString("master", policies.Master)
 
-	replacement := fmt.Sprintf("spec:\n  additionalPolicies: \n    %v\n    %v", node, master)
-	kopsClusterConfig = strings.Replace(kopsClusterConfig, "spec:", replacement, 1)
+	kopsClusterConfig = updateClusterConfigWithPolicies(kopsClusterConfig, policies)
 
 	err := c.kops.ReplaceCluster(kopsClusterConfig)
 
@@ -53,4 +51,16 @@ func (c Cluster) SetIamPolicies(policies config.Policies) error {
 	log.Println("Updated IAM policies")
 
 	return nil
+}
+
+func updateClusterConfigWithPolicies(kopsClusterConfig string, policies config.Policies) string {
+	node := policyString("node", policies.Node)
+	master := policyString("master", policies.Master)
+	policyRegex := regexp.MustCompile(`(?m)(?:  additionalPolicies:(?:.|\n)*?)\n^(  [^\s])`)
+	if policyRegex.MatchString(kopsClusterConfig) {
+		return policyRegex.ReplaceAllString(kopsClusterConfig, fmt.Sprintf("  additionalPolicies: \n    %v\n%v${1}", node, master))
+	} else {
+		return strings.Replace(kopsClusterConfig, "spec:", fmt.Sprintf("spec:\n  additionalPolicies: \n    %v\n    %v", node, master), 1)
+	}
+
 }

@@ -27,7 +27,7 @@ func Addons(file string, f util.Factory, out io.Writer) error {
 		if err := cluster.SetIamPolicies(policies(clusterConfig)); err != nil {
 			return err
 		}
-		
+
 		if err := cluster.CreateClusterResources(); err != nil {
 			return err
 		}
@@ -45,11 +45,7 @@ func addons(clusterConfig config.ClusterConfig) {
 		return
 	}
 	creator := kubectl.New(clusterConfig.ClusterName())
-	/*	creator, err := creator.ForContext(clusterConfig.ClusterName())
-		if err != nil {
-			log.Fatal(err)
-		}
-	*/
+
 	log.Printf("Creating %d addon(s)\n", len(addons))
 
 	for _, addon := range addons {
@@ -58,9 +54,10 @@ func addons(clusterConfig config.ClusterConfig) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		creator.Apply(s)
-		//creator.Create(s)
-
+		err = creator.Apply(s)
+		if err != nil {
+			log.Fatal(err)
+		}
 		log.Printf("%s created\n", addon.Name())
 	}
 }
