@@ -128,6 +128,7 @@ func parseConfigData(content []byte) (ClusterConfig, error) {
 		if len(missingFields) != 0 {
 			return config, errors.New(fmt.Sprintf("Missing required value for field(s): '%v'\n", missingFields))
 		}
+		log.Printf("Successfully parsed configuration for %s", config.ClusterName())
 		return config, nil
 	}
 }
