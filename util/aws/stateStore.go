@@ -9,8 +9,8 @@ import (
 )
 
 func (awsSvc defaultAwsService) GetStateStore(config config.ClusterConfig) string {
-	bucketName := awsSvc.stateStoreBucketName(config.DnsZone)
-	if awsSvc.stateStoreBucketExist(config.DnsZone) {
+	bucketName := awsSvc.stateStoreBucketName(config.Region, config.DnsZone)
+	if awsSvc.stateStoreBucketExist(config.Region, config.DnsZone) {
 		fmt.Printf("Using existing statestore: %v \n", bucketName)
 	} else {
 		fmt.Printf("No statestore S3 bucket found with name: %v \n", bucketName)
