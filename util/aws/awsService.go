@@ -20,6 +20,6 @@ func New() Service {
 	return defaultAwsService{}
 }
 
-func (awsSvc defaultAwsService) awsSession() *session.Session {
-	return session.Must(session.NewSession(&aws.Config{}))
+func (awsSvc defaultAwsService) awsSession(region string) *session.Session {
+	return session.Must(session.NewSession(&aws.Config{Region: aws.String(region)}))
 }
