@@ -17,7 +17,7 @@ func (awsSvc defaultAwsService) GetStateStore(config config.ClusterConfig) strin
 		fmt.Print("Continue and create statestore (y/N): ")
 		reader := bufio.NewReader(os.Stdin)
 		if r, _, _ := reader.ReadRune(); r == 'y' || r == 'Y' {
-			awsSvc.createStateStoreBucket(config.DnsZone, config.Region)
+			awsSvc.createStateStoreBucket(config.Region, config.DnsZone)
 		} else {
 			log.Fatalln("Aborting...")
 		}
