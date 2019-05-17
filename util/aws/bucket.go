@@ -15,7 +15,7 @@ func (awsSvc defaultAwsService) stateStoreBucketName(region, dns string) string 
 	return fmt.Sprintf("%v-%v-%v-kops-storage", *identity.Account, dns, region)
 }
 
-func (awsSvc defaultAwsService) createStateStoreBucket(dns string, region string) {
+func (awsSvc defaultAwsService) createStateStoreBucket(region, dns string) {
 	sess := awsSvc.awsSession(region)
 	s3Svc := s3.New(sess)
 	bucketName := awsSvc.stateStoreBucketName(region, dns)
