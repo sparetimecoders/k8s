@@ -35,7 +35,7 @@ func (c kubectl) Apply(yamlContent string) error {
 	log.Printf("Found %d parts in yaml content", len(parts))
 	for _, part := range parts {
 		if res, err := c.Handler.ApplyCmd([]byte(part)); err != nil {
-			log.Printf("Failed to apply content:\n %v\n\nReason: %v, %v\n", part, err, string(res))
+			log.Printf("Failed to apply content:\n%v\n\nReason: %v, %v\n", part, err, string(res))
 			return err
 		}
 	}
