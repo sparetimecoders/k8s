@@ -35,7 +35,7 @@ spec:
               value: $oauth2_proxy_client_secret
             - name: OAUTH2_PROXY_COOKIE_SECRET
               value: $oauth2_proxy_cookie_secret
-          image: docker.io/colemickens/oauth2_proxy:latest
+          image: quay.io/pusher/oauth2_proxy:V3.2.0
           imagePullPolicy: Always
           name: oauth2-proxy
           ports:
