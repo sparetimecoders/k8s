@@ -80,7 +80,7 @@ cloudLabels: {}
 	}()
 
 	assert.Equal(t, "version", <-factory.Handler.Cmds)
-	assert.Equal(t, "create cluster\n--name=gotest.example.com\n--node-count 2\n--zones eu-west-1a,eu-west-1b,eu-west-1c\n--master-zones eu-west-1a\n--node-size t3.medium\n--master-size t3.small\n--topology public\n--ssh-public-key ~/.ssh/id_rsa.pub\n--networking calico\n--encrypt-etcd-storage\n--authorization=AlwaysAllow\n--target=direct\n--cloud=aws\n--cloud-labels \n--network-cidr 172.21.0.0/22\n--kubernetes-version=1.12.2\n--dns-zone example.com", <-factory.Handler.Cmds)
+	assert.Equal(t, "create cluster\n--name=gotest.example.com\n--node-count 2\n--zones eu-west-1a,eu-west-1b,eu-west-1c\n--master-zones eu-west-1a\n--node-size t3.medium\n--master-size t3.small\n--topology public\n--ssh-public-key ~/.ssh/id_rsa.pub\n--networking calico\n--encrypt-etcd-storage\n--authorization=RBAC\n--target=direct\n--cloud=aws\n--cloud-labels \n--network-cidr 172.21.0.0/22\n--kubernetes-version=1.12.2\n--dns-zone example.com", <-factory.Handler.Cmds)
 	assert.Equal(t, "get ig nodes --name gotest.example.com -o yaml", <-factory.Handler.Cmds)
 	assert.Equal(t, "replace ig  --name gotest.example.com -f -", <-factory.Handler.Cmds)
 	assert.Equal(t, "get ig master-eu-west-1a --name gotest.example.com -o yaml", <-factory.Handler.Cmds)
