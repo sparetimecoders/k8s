@@ -11,7 +11,7 @@ metadata:
   namespace: logging
 
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: fluentd
@@ -29,7 +29,7 @@ rules:
 
 ---
 kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: fluentd
 roleRef:
@@ -59,7 +59,9 @@ spec:
       labels:
         k8s-app: fluentd-logging
         version: v1
+        kubernetes.io/cluster-service: "true"
     spec:
+      serviceAccountName: fluentd
       tolerations:
         - key: node-role.kubernetes.io/master
           effect: NoSchedule

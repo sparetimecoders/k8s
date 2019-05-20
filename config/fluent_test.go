@@ -17,9 +17,9 @@ func TestFluent_readManifestFileWithRemoteFluentSettings(t *testing.T) {
 	assert.Contains(t, s, "name host")
 	assert.Contains(t, s, "host host")
 	assert.Contains(t, s, `CLUSTER_NAME: "cluster"`)
-	assert.Contains(t, s, `FLUENT_USER: "user"`)
-	assert.Contains(t, s, `FLUENT_PASSWORD: "pass"`)
-	assert.Contains(t, s, `FLUENT_SHAREDKEY: "key"`)
+	assert.Contains(t, s, `FLUENT_USER: "dXNlcg=="`)
+	assert.Contains(t, s, `FLUENT_PASSWORD: "cGFzcw=="`)
+	assert.Contains(t, s, `FLUENT_SHAREDKEY: "a2V5"`)
 }
 
 func TestFluent_readManifestFileWithRemoteEsSettingsWithoutAuth(t *testing.T) {

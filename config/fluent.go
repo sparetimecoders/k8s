@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/GeertJohan/go.rice"
@@ -38,9 +39,9 @@ func (i Fluent) Manifests(clusterConfig ClusterConfig) (string, error) {
 	if i.RemoteFluent != nil {
 		replacementStrings["$output"] = "fluent"
 		replacementStrings["$fluent_host"] = i.RemoteFluent.Host
-		replacementStrings["$fluent_username"] = i.RemoteFluent.Username
-		replacementStrings["$fluent_password"] = i.RemoteFluent.Password
-		replacementStrings["$fluent_shared_key"] = i.RemoteFluent.SharedKey
+		replacementStrings["$fluent_username"] = base64.StdEncoding.EncodeToString([]byte(i.RemoteFluent.Username))
+		replacementStrings["$fluent_password"] = base64.StdEncoding.EncodeToString([]byte(i.RemoteFluent.Password))
+		replacementStrings["$fluent_shared_key"] = base64.StdEncoding.EncodeToString([]byte(i.RemoteFluent.SharedKey))
 	} else {
 		replacementStrings["$output"] = "es"
 		replacementStrings["$es_host_and_port"] = fmt.Sprintf("%s:%d", i.RemoteEs.Host, i.RemoteEs.Port)
