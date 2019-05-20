@@ -29,7 +29,6 @@ func TestDelete_NonExistingCluster(t *testing.T) {
 	_ = ioutil.WriteFile(tempFile.Name(), []byte(`
 name: gotest
 dnsZone: example.com
-domain: example.com
 kubernetesVersion: 1.12.2
 masterZones:
   - a
@@ -54,7 +53,6 @@ func TestDelete_ExistingCluster(t *testing.T) {
 	_ = ioutil.WriteFile(tempFile.Name(), []byte(`
 name: gotest
 dnsZone: example.com
-domain: example.com
 kubernetesVersion: 1.12.2
 masterZones:
   - a

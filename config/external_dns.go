@@ -4,7 +4,9 @@ import (
 	"github.com/GeertJohan/go.rice"
 )
 
-type ExternalDNS struct{}
+type ExternalDNS struct {
+	Domain string `yaml:"domain" optional:"true"`
+}
 
 func (e ExternalDNS) Name() string {
 	return "ExternalDNS"
@@ -14,7 +16,7 @@ func (e ExternalDNS) Manifests(clusterConfig ClusterConfig) (string, error) {
 	box := rice.MustFindBox("manifests/external_dns")
 	s := box.MustString("external_dns.yaml")
 
-	return replace(s, map[string]string{"$domain": clusterConfig.Domain, "$cluster_name": clusterConfig.ClusterName()})
+	return replace(s, map[string]string{"$domain": e.Domain, "$cluster_name": clusterConfig.ClusterName()})
 }
 
 func (e ExternalDNS) Policies() Policies {
