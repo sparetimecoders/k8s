@@ -140,7 +140,7 @@ func (k kops) CreateCluster(clusterConfig config.ClusterConfig) (Cluster, error)
 --ssh-public-key %s
 --networking calico
 --encrypt-etcd-storage
---authorization=AlwaysAllow
+--authorization=RBAC
 --target=direct
 --cloud=aws
 --cloud-labels %s

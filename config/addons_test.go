@@ -31,7 +31,6 @@ func config(t *testing.T) ClusterConfig {
 	c, err := ParseConfigData([]byte(`
 name: es
 dnsZone: example.com
-domain: example.com
 cloudLabels:
   environment: prod
   organisation: dSPA
@@ -40,7 +39,9 @@ addons:
     aws:
       timeout: 10
       certificateARN: "arn:...."
-  externalDns: {}
+  externalDns: {
+		domain: example.com
+}
 `))
 	assert.Nil(t, err)
 	return c

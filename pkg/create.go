@@ -9,6 +9,7 @@ import (
 	"gitlab.com/sparetimecoders/k8s-go/util/kops"
 	"io"
 	"log"
+	"time"
 )
 
 func Create(file string, f util.Factory, out io.Writer) error {
@@ -37,9 +38,16 @@ func Create(file string, f util.Factory, out io.Writer) error {
 		setMasterInstanceGroupsToSpotPricesAndSize(awsSvc, cluster, clusterConfig)
 		_ = cluster.CreateClusterResources()
 		// Wait for completion/valid cluster...
-		cluster.WaitForValidState(500)
-		addons(clusterConfig)
-		return nil
+		waitTime := 5 * time.Minute
+		if clusterConfig.DnsZone == "k8s.local" {
+			waitTime = 10 * time.Minute
+		}
+		if cluster.WaitForValidState(int(waitTime.Seconds())) {
+			addons(clusterConfig)
+			return nil
+		} else {
+			return fmt.Errorf("failed to validate cluster in time, state unknown")
+		}
 	}
 }
 
