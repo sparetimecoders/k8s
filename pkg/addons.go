@@ -23,7 +23,7 @@ func Addons(file string, f util.Factory, out io.Writer) error {
 		}
 
 		cluster := kops.GetCluster(clusterConfig.ClusterName(), stateStore)
-		cluster.WaitForValidState(500)
+		cluster.WaitForValidState(30)
 		if err := cluster.SetIamPolicies(policies(clusterConfig)); err != nil {
 			return err
 		}
