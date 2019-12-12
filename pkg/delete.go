@@ -3,8 +3,8 @@ package pkg
 import (
 	"errors"
 	"fmt"
-	"gitlab.com/sparetimecoders/k8s-go/config"
-	"gitlab.com/sparetimecoders/k8s-go/util"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/config"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/util"
 )
 
 func Delete(file string, f util.Factory) error {

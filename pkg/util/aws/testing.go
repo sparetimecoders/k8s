@@ -3,7 +3,7 @@
 package aws
 
 import (
-	"gitlab.com/sparetimecoders/k8s-go/config"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/config"
 )
 
 type MockService struct {

@@ -1,9 +1,5 @@
-vendor
-.idea
-config.yaml
-k8s-go
 *.iml
-_go
-rice-box.go
-.testCoverage.txt
-coverage.*
+.idea
+coverage.txt
+dist
+www/public

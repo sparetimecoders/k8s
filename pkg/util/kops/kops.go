@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/Masterminds/semver"
-	"gitlab.com/sparetimecoders/k8s-go/config"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/config"
 	"io"
 	"log"
 	"os/exec"
@@ -120,9 +120,12 @@ func (k kops) CreateCluster(clusterConfig config.ClusterConfig) (Cluster, error)
 		log.Fatalf("Installed version of kops can't handle requested kubernetes version (%s)", clusterConfig.KubernetesVersion)
 	}
 	name := clusterConfig.ClusterName()
-	zones := fmt.Sprintf("%[1]sa,%[1]sb,%[1]sc", clusterConfig.Region)
+	var zones []string
+	for _, z := range clusterConfig.Nodes.Zones {
+		zones = append(zones, fmt.Sprintf("%s%s", clusterConfig.Region, z))
+	}
 	var masterZones []string
-	for _, z := range clusterConfig.MasterZones {
+	for _, z := range clusterConfig.Masters.Zones {
 		masterZones = append(masterZones, fmt.Sprintf("%s%s", clusterConfig.Region, z))
 	}
 	var cloudLabels []string
@@ -149,10 +152,10 @@ func (k kops) CreateCluster(clusterConfig config.ClusterConfig) (Cluster, error)
 `,
 		name,
 		clusterConfig.Nodes.Max,
-		zones,
+		strings.Join(zones, ","),
 		strings.Join(masterZones, ","),
 		clusterConfig.Nodes.InstanceType,
-		clusterConfig.MasterInstanceType,
+		clusterConfig.Masters.InstanceType,
 		clusterConfig.SshKeyPath,
 		strings.Join(cloudLabels, ","),
 		clusterConfig.NetworkCIDR,
@@ -161,6 +164,9 @@ func (k kops) CreateCluster(clusterConfig config.ClusterConfig) (Cluster, error)
 
 	if clusterConfig.DnsZone != config.LocalCluster {
 		params += fmt.Sprintf("--dns-zone %v", clusterConfig.DnsZone)
+	}
+	if clusterConfig.Vpc != "" {
+		params += fmt.Sprintf("--vpc %v", clusterConfig.Vpc)
 	}
 
 	e := k.Handler.RunCmd(params, nil)

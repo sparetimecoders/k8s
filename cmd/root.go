@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"gitlab.com/sparetimecoders/k8s-go/util"
-	"gitlab.com/sparetimecoders/k8s-go/util/aws"
-	"gitlab.com/sparetimecoders/k8s-go/util/kops"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/util"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/util/aws"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/util/kops"
 	"io"
 	"os"
 )

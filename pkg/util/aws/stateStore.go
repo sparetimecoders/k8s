@@ -3,7 +3,7 @@ package aws
 import (
 	"bufio"
 	"fmt"
-	"gitlab.com/sparetimecoders/k8s-go/config"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/config"
 	"log"
 	"os"
 )

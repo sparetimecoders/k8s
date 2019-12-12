@@ -3,7 +3,7 @@ package cmd
 import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/sparetimecoders/k8s-go/util"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/util"
 	"testing"
 )
 

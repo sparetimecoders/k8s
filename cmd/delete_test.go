@@ -3,7 +3,7 @@ package cmd
 import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/sparetimecoders/k8s-go/util"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/util"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -30,7 +30,8 @@ func TestDelete_NonExistingCluster(t *testing.T) {
 name: gotest
 dnsZone: example.com
 kubernetesVersion: 1.12.2
-masterZones:
+masters:
+  zones:
   - a
 cloudLabels: {}
 `), os.ModeExclusive)
@@ -54,7 +55,8 @@ func TestDelete_ExistingCluster(t *testing.T) {
 name: gotest
 dnsZone: example.com
 kubernetesVersion: 1.12.2
-masterZones:
+masters:
+  zones:
   - a
 cloudLabels: {}
 `), os.ModeExclusive)

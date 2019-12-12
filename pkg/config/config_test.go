@@ -9,35 +9,45 @@ import (
 
 func TestValidConfig(t *testing.T) {
 	c, err := ParseConfigData([]byte(`
-name: es
+name: test-cluster
 dnsZone: example.com
-masterZones:
+vpc: vpc-123
+networkCIDR: 172.21.0.0/16
+masters:
+  zones:
   - a
   - b
   - c
+  spot: true
+  type: m3.large
 cloudLabels:
   environment: prod
-  organisation: dSPA
+  organisation: org
 `))
 
 	assert.Nil(t, err)
 
 	assert.Equal(t, ClusterConfig{
-		Name:              "es",
-		KubernetesVersion: "1.11.7",
+		Name:              "test-cluster",
+		KubernetesVersion: "1.15.5",
 		DnsZone:           "example.com",
 		Region:            "eu-west-1",
-		MasterZones:       []string{"a", "b", "c"},
-		NetworkCIDR:       "172.21.0.0/22",
+		Vpc:"vpc-123",
+		NetworkCIDR: "172.21.0.0/16",
+		Masters: MasterNodes{
+			Zones:        []string{"a", "b", "c"},
+			Spot:         true,
+			InstanceType: "m3.large",
+		},
 		Nodes: Nodes{
 			Min:          1,
 			Max:          2,
 			InstanceType: "t3.medium",
+			Zones:        []string{"a","b","c"},
 		},
-		MasterInstanceType: "t3.small",
 		CloudLabels: map[string]string{
 			"environment":  "prod",
-			"organisation": "dSPA",
+			"organisation": "org",
 		},
 		SshKeyPath: "~/.ssh/id_rsa.pub",
 	}, c)
@@ -54,32 +64,35 @@ name: es
 func TestDefaultValuesConfig(t *testing.T) {
 
 	c, err := ParseConfigData([]byte(`
-name: es
+name: test-cluster
 dnsZone: example.com
 cloudLabels:
   environment: prod
-  organisation: dSPA
+  organisation: org
   
 `))
 
 	assert.Nil(t, err)
 
 	assert.Equal(t, ClusterConfig{
-		Name:              "es",
-		KubernetesVersion: "1.11.7",
+		Name:              "test-cluster",
+		KubernetesVersion: "1.15.5",
 		DnsZone:           "example.com",
 		Region:            "eu-west-1",
-		MasterZones:       []string{"a"},
-		NetworkCIDR:       "172.21.0.0/22",
+		Masters: MasterNodes{
+			Zones:        []string{"a"},
+			Spot:         false,
+			InstanceType: "t3.small",
+		}, NetworkCIDR: "172.21.0.0/22",
 		Nodes: Nodes{
 			Min:          1,
 			Max:          2,
 			InstanceType: "t3.medium",
+			Zones:        []string{"a","b","c"},
 		},
-		MasterInstanceType: "t3.small",
 		CloudLabels: map[string]string{
 			"environment":  "prod",
-			"organisation": "dSPA",
+			"organisation": "org",
 		},
 		SshKeyPath: "~/.ssh/id_rsa.pub",
 	}, c)
@@ -88,11 +101,11 @@ cloudLabels:
 
 func TestDefaultValuesWithSomeGiven(t *testing.T) {
 	c, err := ParseConfigData([]byte(`
-name: es
+name: test-cluster
 dnsZone: example.com
 cloudLabels:
   environment: prod
-  organisation: dSPA
+  organisation: org
 nodes:
   max: 10
 `))

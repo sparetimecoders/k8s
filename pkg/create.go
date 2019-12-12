@@ -3,10 +3,10 @@ package pkg
 import (
 	"errors"
 	"fmt"
-	"gitlab.com/sparetimecoders/k8s-go/config"
-	"gitlab.com/sparetimecoders/k8s-go/util"
-	"gitlab.com/sparetimecoders/k8s-go/util/aws"
-	"gitlab.com/sparetimecoders/k8s-go/util/kops"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/config"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/util"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/util/aws"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/util/kops"
 	"io"
 	"log"
 	"time"
@@ -52,17 +52,23 @@ func Create(file string, f util.Factory, out io.Writer) error {
 }
 
 func setNodeInstanceGroupToSpotPricesAndSize(awsSvc aws.Service, cluster kops.Cluster, clusterConfig config.ClusterConfig) {
-	price := awsSvc.InstancePrice(clusterConfig.Nodes.InstanceType, clusterConfig.Region)
+	var price float64
+	if clusterConfig.Nodes.Spot {
+		price = awsSvc.InstancePrice(clusterConfig.Nodes.InstanceType, clusterConfig.Region)
+	}
 	autoscaler := config.ClusterAutoscaler{}
 	autoscale := clusterConfig.GetAddon(autoscaler) != nil
 
 	setInstanceGroupToSpotPricesAndSize(cluster, "nodes", clusterConfig.Nodes.Min, clusterConfig.Nodes.Max, price, autoscale)
 }
 
-func setMasterInstanceGroupsToSpotPricesAndSize(awsSvc aws.Service, cluster kops.Cluster, config config.ClusterConfig) {
-	for _, zone := range config.MasterZones {
-		igName := fmt.Sprintf("master-%v%v", config.Region, zone)
-		price := awsSvc.InstancePrice(config.MasterInstanceType, config.Region)
+func setMasterInstanceGroupsToSpotPricesAndSize(awsSvc aws.Service, cluster kops.Cluster, clusterConfig config.ClusterConfig) {
+	var price float64
+	if clusterConfig.Masters.Spot {
+		price = awsSvc.InstancePrice(clusterConfig.Masters.InstanceType, clusterConfig.Region)
+	}
+	for _, zone := range clusterConfig.Masters.Zones {
+		igName := fmt.Sprintf("master-%v%v", clusterConfig.Region, zone)
 		setInstanceGroupToSpotPricesAndSize(cluster, igName, 1, 1, price, false)
 	}
 }
@@ -73,7 +79,10 @@ func setInstanceGroupToSpotPricesAndSize(cluster kops.Cluster, igName string, mi
 		log.Fatalf("Failed to get instancegroup %v, %v", igName, err)
 	}
 
-	group = group.MinSize(min).MaxSize(max).MaxPrice(price)
+	group = group.MinSize(min).MaxSize(max)
+	if price > 0 {
+		group = group.MaxPrice(price)
+	}
 	if autoScale {
 		group = group.AutoScale()
 	}

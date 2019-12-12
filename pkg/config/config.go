@@ -23,7 +23,15 @@ type Policy struct {
 type Nodes struct {
 	Min          int      `yaml:"min" default:"1"`
 	Max          int      `yaml:"max" default:"2"`
-	InstanceType string   `yaml:"instanceType" default:"t3.medium"`
+	Zones        []string `yaml:"zones" default:"a,b,c"`
+	Spot         bool     `yaml:"spot" default:"false"`
+	InstanceType string   `yaml:"type" default:"t3.medium"`
+	Policies     []Policy `yaml:"policies" optional:"true"`
+}
+type MasterNodes struct {
+	Zones        []string `yaml:"zones" default:"a" type:"quorum"`
+	Spot         bool     `yaml:"spot" default:"false"`
+	InstanceType string   `yaml:"type" default:"t3.small"`
 	Policies     []Policy `yaml:"policies" optional:"true"`
 }
 
@@ -36,17 +44,17 @@ type Policies struct {
 const LocalCluster = "k8s.local"
 
 type ClusterConfig struct {
-	Name               string            `yaml:"name"`
-	KubernetesVersion  string            `yaml:"kubernetesVersion" default:"1.11.7"`
-	DnsZone            string            `yaml:"dnsZone" default:"k8s.local"`
-	Region             string            `yaml:"region" default:"eu-west-1"`
-	MasterZones        []string          `yaml:"masterZones" default:"a"`
-	NetworkCIDR        string            `yaml:"networkCIDR" default:"172.21.0.0/22"`
-	Nodes              Nodes             `yaml:"nodes"`
-	MasterInstanceType string            `yaml:"masterInstanceType" default:"t3.small"`
-	CloudLabels        map[string]string `yaml:"cloudLabels" default:""`
-	SshKeyPath         string            `yaml:"sshKeyPath" default:"~/.ssh/id_rsa.pub"`
-	Addons             *Addons           `yaml:"addons" optional:"true"`
+	Name              string            `yaml:"name"`
+	KubernetesVersion string            `yaml:"kubernetesVersion" default:"1.15.5"`
+	DnsZone           string            `yaml:"dnsZone" default:"k8s.local"`
+	Region            string            `yaml:"region" default:"eu-west-1"`
+	Vpc               string            `yaml:"vpc" optional:"true"`
+	NetworkCIDR       string            `yaml:"networkCIDR" default:"172.21.0.0/22"`
+	Masters           MasterNodes       `yaml:"masters"`
+	Nodes             Nodes             `yaml:"nodes"`
+	CloudLabels       map[string]string `yaml:"cloudLabels" default:""`
+	SshKeyPath        string            `yaml:"sshKeyPath" default:"~/.ssh/id_rsa.pub"`
+	Addons            *Addons           `yaml:"addons" optional:"true"`
 }
 
 func (p Policies) Exists() bool {
@@ -139,6 +147,7 @@ func handleDefaultValues(t reflect.Value, missingFields *[]string, prefix string
 		value := t.Field(i)
 		defaultValue := refType.Field(i).Tag.Get("default")
 		mandatory := refType.Field(i).Tag.Get("optional") != "true"
+		quorum := refType.Field(i).Tag.Get("type") == "quorum"
 		if value.Kind() == reflect.Struct {
 			if err := handleDefaultValues(value, missingFields, name); err != nil {
 				return err
@@ -155,6 +164,11 @@ func handleDefaultValues(t reflect.Value, missingFields *[]string, prefix string
 				if err := set(value, name, defaultValue, missingFields); err != nil {
 					return err
 				}
+			}
+		}
+		if quorum {
+			if !(value.Len() == 1 || value.Len() == 3 || value.Len() == 5) {
+				return fmt.Errorf("%d is not a valid quorum size, expected 1,3,5 for %s ", value.Len(), name)
 			}
 		}
 	}

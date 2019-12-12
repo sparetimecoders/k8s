@@ -3,10 +3,10 @@ package pkg
 import (
 	"errors"
 	"fmt"
-	"gitlab.com/sparetimecoders/k8s-go/config"
-	"gitlab.com/sparetimecoders/k8s-go/util"
-	"gitlab.com/sparetimecoders/k8s-go/util/kops"
-	"gitlab.com/sparetimecoders/k8s-go/util/kubectl"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/config"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/util"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/util/kops"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/util/kubectl"
 	"io"
 	"log"
 )

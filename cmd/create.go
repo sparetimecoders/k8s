@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"gitlab.com/sparetimecoders/k8s-go/pkg"
-	"gitlab.com/sparetimecoders/k8s-go/util"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/util"
 	"io"
 )
 

@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/sparetimecoders/k8s-go/config"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/config"
 	"testing"
 )
 

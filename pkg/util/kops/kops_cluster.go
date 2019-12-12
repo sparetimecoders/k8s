@@ -3,7 +3,7 @@ package kops
 import (
 	"encoding/json"
 	"fmt"
-	"gitlab.com/sparetimecoders/k8s-go/config"
+	"gitlab.com/sparetimecoders/k8s-go/pkg/config"
 	"log"
 	"regexp"
 	"strings"
